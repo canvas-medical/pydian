@@ -1,0 +1,172 @@
+{
+    "resourceType": "Patient",
+    "extension": [
+        {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "M"
+        },
+        {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+                {
+                    "url": "text",
+                    "valueString": "UNK"
+                }
+            ]
+        },
+        {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+                {
+                    "url": "text",
+                    "valueString": "UNK"
+                }
+            ]
+        },
+        {
+            "url": "http://hl7.org/fhir/StructureDefinition/tz-code",
+            "valueCode": "America/New_York"
+        },
+        {
+            "url": "http://schemas.canvasmedical.com/fhir/extensions/clinical-note",
+            "valueString": "I am a clinical caption from a Create message"
+        },
+        {
+            "url": "http://schemas.canvasmedical.com/fhir/extensions/administrative-note",
+            "valueString": "I am an administrative caption from a Create message"
+        }
+    ],
+    "identifier": [
+        {
+            "use": "usual",
+            "system": "HealthCo",
+            "value": "s07960990"
+        }
+    ],
+    "active": true,
+    "name": [
+        {
+            "use": "official",
+            "family": "Bahar",
+            "given": [
+                "Issam",
+                "Khuzaimah"
+            ]
+        },
+        {
+            "use": "nickname",
+            "given": [
+                "Nick Name"
+            ]
+        }
+    ],
+    "telecom": [
+        {
+            "system": "phone",
+            "value": "5554320555",
+            "use": "mobile",
+            "rank": 1
+        },
+        {
+            "system": "email",
+            "value": "i.k.bahar@example.com",
+            "use": "work",
+            "rank": 1
+        }
+    ],
+    "gender": "male",
+    "birthDate": "1949-11-13",
+    "address": [
+        {
+            "use": "home",
+            "type": "both",
+            "text": "4247 Murry Street, Chesapeake, VA 23322",
+            "line": [
+                "4247 Murry Street"
+            ],
+            "city": "Chesapeake",
+            "state": "VA",
+            "postalCode": "23322"
+        }
+    ],
+    "contact": [
+        {
+            "name": {
+                "text": "Test Spouse"
+            },
+            "relationship": [
+                {
+                    "text": "Spouse"
+                }
+            ],
+            "telecom": [
+                {
+                    "system": "email",
+                    "value": "test@me.com"
+                }
+            ],
+            "extension": [
+                {
+                    "url": "http://schemas.canvasmedical.com/fhir/extensions/emergency-contact",
+                    "valueBoolean": true
+                },
+                {
+                    "url": "http://schemas.canvasmedical.com/fhir/extensions/authorized-for-release-of-information",
+                    "valueBoolean": true
+                }
+            ]
+        },
+        {
+            "name": {
+                "text": "Test Mom"
+            },
+            "relationship": [
+                {
+                    "text": "Mom"
+                }
+            ],
+            "telecom": [
+                {
+                    "system": "phone",
+                    "value": "7177327068"
+                }
+            ],
+            "extension": [
+                {
+                    "url": "http://schemas.canvasmedical.com/fhir/extensions/authorized-for-release-of-information",
+                    "valueBoolean": true
+                }
+            ]
+        },
+        {
+            "name": {
+                "text": "Test Email"
+            },
+            "relationship": [
+                {
+                    "text": "Father"
+                }
+            ],
+            "telecom": [
+                {
+                    "system": "email",
+                    "value": "test.email@email.test"
+                }
+            ]
+        }
+    ],
+    "communication": [
+        {
+            "language": {
+                "coding": [
+                    {
+                        "system": "http://hl7.org/fhir/ValueSet/all-languages",
+                        "code": "en",
+                        "display": "English"
+                    }
+                ],
+                "text": "English"
+            }
+        }
+    ]
+}
