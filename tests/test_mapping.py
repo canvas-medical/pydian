@@ -88,7 +88,17 @@ def test_nested_get():
                     {'num': 6}
                 ]
             }
-        }]
+        },
+        {
+            "patient": {
+                "id": "jkl101112",
+                "active": True,
+                'dicts': [
+                    {'num': 7}
+                ]
+            }
+        },
+        ]
     }
     mapping = {
         "CASE_constant": 123,
@@ -102,20 +112,44 @@ def test_nested_get():
     res = E.apply_mapping(source, mapping)
     assert res == {
         'CASE_constant': mapping.get('CASE_constant'),
-        'CASE_unwrap_active': [True, False, True],
-        'CASE_unwrap_id': ['abc123', 'def456', 'ghi789'],
+        'CASE_unwrap_active': [True, False, True, True],
+        'CASE_unwrap_id': ['abc123', 'def456', 'ghi789', 'jkl101112'],
         'CASE_unwrap_list': [[1,2,3], [4,5,6], [7,8,9]],
         'CASE_unwrap_list_twice': [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        'CASE_unwrap_list_dict': [[1,2], [3,4] ,[5,6]],
-        'CASE_unwrap_list_dict_twice': [1, 2, 3, 4, 5, 6],
+        'CASE_unwrap_list_dict': [[1,2], [3,4] ,[5,6], [7]],
+        'CASE_unwrap_list_dict_twice': [1, 2, 3, 4, 5, 6, 7],
     }
 
 def test_eval_then_apply():
-    source = {}
-    mapping = {}
+    source = {
+        'int': 1,
+        'float': 5.0,
+        'str': 'abc123',
+        'list_str': [
+            'abc',
+            'def',
+            'ghi'
+        ],
+        'dict': {
+            'str': 'def456',
+            'dict_nested': {
+                'str': 'ghi789'
+            }
+        }
+    }
+    add_one = lambda x: x + 1
+    append_one = lambda x: f'{x}_one'
+    mapping = {
+        'CASE_int': M.eval_then_apply(M.get('int'), add_one),
+        'CASE_float': M.eval_then_apply(M.get('float'), add_one),
+        'CASE_str': M.eval_then_apply(M.get('str'), append_one)
+    }
     res = E.apply_mapping(source, mapping)
-    assert res == {}
-    raise NotImplementedError('Implement this!')
+    assert res == {
+        'CASE_int': add_one(E.single_get(source, 'int')),
+        'CASE_float': add_one(E.single_get(source, 'float')),
+        'CASE_str': append_one(E.single_get(source, 'str'))
+    }
 
 def test_map_list():
     source = {}
