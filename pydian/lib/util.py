@@ -43,13 +43,13 @@ def has_content(obj: Any) -> bool:
             res = res and inner_res
     return res
 
-def update_dict(msg: dict, k: Union[str, tuple], v: Any) -> dict:
+def update_dict(msg: dict, k: Union[str, tuple], v: Any, remove_empty: bool = False) -> dict:
     """
     Updates the input dict `d` inplace with `k`, `v` if `v` has content. 
     Also handles joint key case (passed via a tuple)
     """
     d = deepcopy(msg)
-    if has_content(v):
+    if not remove_empty or has_content(v):
         # check for tuple keys
         if type(k) == str:
             d.update({k: v})
@@ -68,12 +68,3 @@ def assign_name(fn: Callable, name: str) -> Callable:
     #       The end goal is make the stack trace nicer on errors
     fn.__name__ = name
     return fn
-
-def call_function(fn: Callable, *args) -> Any:
-    """
-    Calls funtion with exception message
-    """
-    try:
-        fn(*args)
-    except:
-        raise ValueError(f'Failed to call the following function with args:\n\tFunction: {fn.__name__}\n\tArgs: {args}')

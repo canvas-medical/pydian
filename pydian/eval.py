@@ -28,6 +28,12 @@ def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) ->
         # TODO: make sure exceptions here are nice
         except Exception as e:
             raise ValueError(f'Function evaluation failed at statement {statement}, error: {e}')
+    elif type(statement) == list:
+        res = [evaluate_mapping_statement(msg, s, remove_empty) for s in statement]
+    elif type(statement) == dict:
+        res = {
+            k: evaluate_mapping_statement(msg, statement[k], remove_empty) for k in statement
+        }
     else:
         res = statement
         if type(res) not in {str, bool, int, float}:
@@ -37,7 +43,7 @@ def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) ->
     return res
 
 
-def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None, remove_empty: Optional[bool] = False) -> dict:
+def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None, remove_empty: bool = False) -> dict:
     """
     The main mapping function. Recursively evaluates and creates transformed JSON from input mapping
 
@@ -51,23 +57,25 @@ def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None, 
     for k in mapping:
         # Dict (JSON Object)
         if type(mapping[k]) == dict:
-            v = apply_mapping(local_msg, mapping[k])
-            res = update_dict(res, k, v)
+            v = apply_mapping(local_msg, mapping[k], remove_empty=remove_empty)
+            res = update_dict(res, k, v, remove_empty=remove_empty)
         # List (JSON Array)
         elif type(mapping[k]) == list:
             vals = []
             for m in mapping[k]:
                 if type(m) == dict:
-                    v = apply_mapping(local_msg, m)
-                    vals.append(v) if has_content(v) else None
+                    v = apply_mapping(local_msg, m, remove_empty=remove_empty)
+                    if not remove_empty or has_content(v):
+                        vals.append(v)
                 else:
                     v = evaluate_mapping_statement(local_msg, m, remove_empty=remove_empty)
-                    vals.append(v) if has_content(v) else None
-            res = update_dict(res, k, vals)
+                    if not remove_empty or has_content(v):
+                        vals.append(v)
+            res = update_dict(res, k, vals, remove_empty)
         # Primitive, or Function output
         else:
-            v = evaluate_mapping_statement(msg, mapping[k], remove_empty=remove_empty)
-            res = update_dict(res, k, v)
+            v = evaluate_mapping_statement(local_msg, mapping[k], remove_empty=remove_empty)
+            res = update_dict(res, k, v, remove_empty=remove_empty)
     return res
 
 
@@ -117,7 +125,7 @@ def nested_get(msg: dict, key: str, default: Any = None) -> Any:
     TODO: Add support for querying, maybe e.g. [?: thing.val==1]
     """
     stack = key.split('.')[::-1]
-    res = msg
+    res = deepcopy(msg)
     while len(stack) > 0:
         k = stack.pop()
         # If need to unwrap, then empty stack 
@@ -127,7 +135,7 @@ def nested_get(msg: dict, key: str, default: Any = None) -> Any:
             stack = []
             res = res.get(k)
             if remaining_key != '':
-                res = [nested_get(v, remaining_key, v) for v in res]
+                res = [nested_get(v, remaining_key, None) for v in res]
         else:
             res = single_get(res, k)
         if res == None:
@@ -135,17 +143,18 @@ def nested_get(msg: dict, key: str, default: Any = None) -> Any:
     # HACK: Handle unwrapping if specified at the end
     # TODO: Find a nicer way to do this. Works for now...
     if key[-3:] == '[*]' and type(res) == list and type(res[0]) == list:
+        res = [l for l in res if l != None]
         res = list(chain(*res))
     return res if res != None else default
 
-def map_list(msg: dict, iter_over: Union[list, Callable], apply_fn: Callable) -> list:
+def map_list(msg: dict, iter_over: Union[list, Callable], apply_fn: Callable, remove_empty: bool = False) -> list:
     """
     Takes function in and applies it over each item from `iter_over`. 
     
     Returns as list
     """
     if callable(iter_over):
-        iter_over = evaluate_mapping_statement(msg, iter_over)
+        iter_over = evaluate_mapping_statement(msg, iter_over, remove_empty)
 
     if not hasattr(iter_over, '__iter__'):
         raise TypeError(f'iter_over was not a valid tuple or iterable, got: {iter_over}') 
@@ -170,63 +179,22 @@ def concat(msg: dict, items: tuple, remove_empty: bool) -> Any:
             res += val
     return res
 
-def filter_list(msg: dict, items: list, filter_expr: Callable, remove_empty: bool) -> list:
+def filter_list(msg: dict, items: tuple, filter_expr: Callable, remove_empty: bool) -> list:
     """
     Takes all items in the list, and returns a list with only items passing the filter_expr
     """
-    res = [
-        evaluate_mapping_statement(msg, item, remove_empty)
-        for item in items
-    ]
-    return filter(filter_expr, res)
+    res = []
+    for item in items:
+        ev = evaluate_mapping_statement(msg, item, remove_empty)
+        if type(ev) != list:
+            ev = list(ev)
+        res += ev
+    return list(filter(filter_expr, res))
 
 def lookup(msg: dict, val: Any, lookup_dict: dict, default: Any) -> Optional[Any]:
     """
     Looks up a value in a dictionary. Assume val should be evaluated if it's callable. Take defaults
     """
     if callable(val):
-        val = evaluate_mapping_statement(msg, val)
+        val = evaluate_mapping_statement(msg, val, remove_empty=False)
     return lookup_dict.get(val, default)
-
-# def get_and_apply(msg: dict, key: str, apply: Callable) -> Any:
-#     """
-#     Applys a get using the key, then runs the result with the apply function.
-#     The apply function should only take 1 param: the result of the get
-
-#     Expects caller to pass-in the right types to the apply function
-#     """
-#     if type(apply) is not Callable:
-#         raise TypeError(f'Apply function needs to be callable, got type: {type(apply)}')
-#     res = nested_get(msg, key) if '.' in key else single_get(msg, key)
-#     return apply(res)
-
-# def evaluate_list_then_add(msg: dict, eval_list: list) -> Any:
-#     """
-#     Evaluates each statement (returning an object) and returns a resulting object
-
-#     If any statement evaluates to None, then returns None
-#     """
-#     res = None
-#     for eval in eval_list:
-#         l = evaluate_mapping_statement(msg, eval, remove_empty=False)
-#         # If any statement evalautes to None, exit and return None
-#         if l == None:
-#             return None
-#         if res == None:
-#             res = l
-#         else:
-#             res += l
-#     return res
-
-# def map_list_then_add(msg: dict, iter_over: Union[list, Callable], apply_fn: Callable) -> list:
-#     """
-#     Similar to map_list
-#     """
-#     eval_list = map_list(msg, iter_over, apply_fn)
-#     res = None
-#     for item in eval_list:
-#         if res == None:
-#             res = item
-#         else:
-#             res += item
-#     return res

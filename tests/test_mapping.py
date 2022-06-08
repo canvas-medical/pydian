@@ -1,5 +1,6 @@
 import pydian.mapping as M
 import pydian.eval as E
+from functools import partial
 
 def test_get():
     source = {
@@ -39,7 +40,7 @@ def test_get():
             'out_of_bounds': M.get('list_data[2].patient')
         }
     }
-    res = E.apply_mapping(source, mapping)
+    res = E.apply_mapping(source, mapping, remove_empty=True)
     assert res == {
         'CASE_constant': mapping.get('CASE_constant'),
         'CASE_single': source.get('data'),
@@ -93,6 +94,7 @@ def test_nested_get():
             "patient": {
                 "id": "jkl101112",
                 "active": True,
+                # 'ints' is deliberately missing
                 'dicts': [
                     {'num': 7}
                 ]
@@ -109,7 +111,7 @@ def test_nested_get():
         'CASE_unwrap_list_dict': M.get('data[*].patient.dicts[*].num'),
         'CASE_unwrap_list_dict_twice': M.get('data[*].patient.dicts[*].num[*]')
     }
-    res = E.apply_mapping(source, mapping)
+    res = E.apply_mapping(source, mapping, remove_empty=True) # Here, remove_empty to ignore the None case
     assert res == {
         'CASE_constant': mapping.get('CASE_constant'),
         'CASE_unwrap_active': [True, False, True, True],
@@ -152,36 +154,150 @@ def test_eval_then_apply():
     }
 
 def test_map_list():
-    source = {}
-    mapping = {}
+    source = {
+        'list_A': [
+            'a',
+            'b'
+        ],
+        'list_B': [
+            'c',
+            'd',
+            'e',
+            ''
+        ],
+    }
+    append_str = lambda x, s: f'{x}_{s}'
+    append_one = partial(append_str, s='one')
+    EXAMPLE_STR = 'two'
+    mapping = {
+        'A': M.map_list(
+            M.get('list_A'),
+            append_one
+        ),
+        'B': M.map_list(
+            M.get('list_B'),
+            partial(append_str, s=EXAMPLE_STR)
+        )
+    }
     res = E.apply_mapping(source, mapping)
-    assert res == {}
-    raise NotImplementedError('Implement this!')
+    assert res == {
+        'A': [append_one(s) for s in source.get('list_A')],
+        'B': [append_str(s, EXAMPLE_STR) for s in source.get('list_B')]
+    }
 
 def test_concat():
-    source = {}
-    mapping = {}
+    source = {
+        'list_A': [
+            'a',
+            'b'
+        ],
+        'list_B': [
+            'c',
+            'd',
+            'e',
+            ''
+        ]
+    }
+    mapping = {
+        'res': M.concat(
+            M.get('list_A'),
+            M.get('list_B'),
+            remove_empty=False
+        )
+    }
     res = E.apply_mapping(source, mapping)
-    assert res == {}
-    raise NotImplementedError('Implement this!')
+    assert res == {
+        'res': ['a', 'b', 'c', 'd', 'e', '']
+    }
+    res = E.apply_mapping(source, mapping, remove_empty=True)
+    assert res == {
+        'res': ['a', 'b', 'c', 'd', 'e']
+    }
 
 def test_filter_list():
-    source = {}
-    mapping = {}
+    source = {
+        'list_A': [1, 2, 3],
+        'list_B': [4, 5, 6, 7, 8]
+    }
+    is_even = lambda x: x % 2 == 0
+    is_odd = lambda x: x % 2 == 1
+    is_str = lambda x: type(x) == str
+    mapping = {
+        'A_odds': M.filter_list(
+            M.get('list_A'),
+            filter_expr=is_odd
+        ),
+        'A_evens': M.filter_list(
+            M.get('list_A'),
+            filter_expr=is_even
+        ),
+        'B_odds': M.filter_list(
+            M.get('list_B'),
+            filter_expr=is_odd
+        ),
+        'B_evens': M.filter_list(
+            M.get('list_B'),
+            filter_expr=is_even
+        ),
+        'B_strs': M.filter_list(
+            M.get('list_B'),
+            filter_expr=is_str
+        )
+    }
     res = E.apply_mapping(source, mapping)
-    assert res == {}
-    raise NotImplementedError('Implement this!')
+    assert res == {
+        'A_odds': [1, 3],
+        'A_evens': [2],
+        'B_odds': [5,7],
+        'B_evens': [4,6,8],
+        'B_strs': []
+    }
 
 def test_lookup():
-    source = {}
-    mapping = {}
+    source = {
+        'first': 'A',
+        'second': 'B',
+        'third': 'not_found'
+    }
+    d = {
+        'A': 'found_A',
+        'B': 'found_B'
+    }
+    mapping = {
+        'res_first': M.lookup(M.get('first'), d),
+        'res_second': M.lookup(M.get('second'), d),
+        'res_third': M.lookup(M.get('third'), d)
+    }
     res = E.apply_mapping(source, mapping)
-    assert res == {}
-    raise NotImplementedError('Implement this!')
+    assert res == {
+        'res_first': d.get(source.get('first')),
+        'res_second': d.get(source.get('second')),
+        'res_third': d.get(source.get('third'))
+    }
 
 def test_apply_mapping():
-    source = {}
-    mapping = {}
+    source = {
+        'first': 'A',
+        'second': 'B'
+    }
+    mod_str = lambda x: f'{x}.modded'
+    sub_mapping = {
+        'second_mod': M.get('second', then=mod_str)
+    }
+    mapping = {
+        'first_mod': M.get('first', then=mod_str),
+        'nested_mod': {
+            'res':  M.apply_mapping(sub_mapping),
+            'const': True,
+            'first_mod_again': M.get('first', then=mod_str),
+        }
+    }
     res = E.apply_mapping(source, mapping)
-    assert res == {}
-    raise NotImplementedError('Implement this!')
+    assert res == {
+        'first_mod': mod_str(source.get('first')),
+        'nested_mod': {
+            'res': { 'second_mod': mod_str(source.get('second')) },
+            'const': True,
+            'first_mod_again': mod_str(source.get('first')),
+        }
+    }
