@@ -10,6 +10,7 @@ from typing import Any, Optional, Union
 from collections.abc import Callable
 from pydian.lib.util import has_content, remove_empty_values, update_dict
 from itertools import chain
+from copy import deepcopy
 import re
 
 def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) -> Any:
@@ -23,7 +24,7 @@ def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) ->
     res = None
     if callable(statement):
         try:
-            res = statement(msg)
+            res = statement(deepcopy(msg))
         # TODO: make sure exceptions here are nice
         except Exception as e:
             raise ValueError(f'Function evaluation failed at statement {statement}, error: {e}')
@@ -42,30 +43,31 @@ def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None, 
 
     Python's native recursion limit is ~1000 calls which functionally should not be an issue
     """
+    local_msg = deepcopy(msg)
     if start_at_key:
-        msg = nested_get(msg, start_at_key)
+        local_msg = nested_get(local_msg, start_at_key)
     res = dict()
     # Only use fields specified in mapping
     for k in mapping:
         # Dict (JSON Object)
         if type(mapping[k]) == dict:
-            v = apply_mapping(msg, mapping[k])
-            update_dict(res, k, v)
+            v = apply_mapping(local_msg, mapping[k])
+            res = update_dict(res, k, v)
         # List (JSON Array)
         elif type(mapping[k]) == list:
             vals = []
             for m in mapping[k]:
                 if type(m) == dict:
-                    v = apply_mapping(msg, m)
+                    v = apply_mapping(local_msg, m)
                     vals.append(v) if has_content(v) else None
                 else:
-                    v = evaluate_mapping_statement(msg, m, remove_empty=remove_empty)
+                    v = evaluate_mapping_statement(local_msg, m, remove_empty=remove_empty)
                     vals.append(v) if has_content(v) else None
-            update_dict(res, k, vals)
+            res = update_dict(res, k, vals)
         # Primitive, or Function output
         else:
             v = evaluate_mapping_statement(msg, mapping[k], remove_empty=remove_empty)
-            update_dict(res, k, v)
+            res = update_dict(res, k, v)
     return res
 
 

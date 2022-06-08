@@ -1,4 +1,5 @@
 from typing import Any, Callable, Union
+from copy import deepcopy
 
 def remove_empty_values(input: Union[list, dict]):
     """
@@ -42,11 +43,12 @@ def has_content(obj: Any) -> bool:
             res = res and inner_res
     return res
 
-def update_dict(d: dict, k: Union[str, tuple], v: Any) -> bool:
+def update_dict(msg: dict, k: Union[str, tuple], v: Any) -> dict:
     """
     Updates the input dict `d` inplace with `k`, `v` if `v` has content. 
     Also handles joint key case (passed via a tuple)
     """
+    d = deepcopy(msg)
     if has_content(v):
         # check for tuple keys
         if type(k) == str:
@@ -56,7 +58,7 @@ def update_dict(d: dict, k: Union[str, tuple], v: Any) -> bool:
                 d.update({k[i]: v[i] for i in range(len(k))})
             except:
                 raise ValueError(f'Dictionary insert failed. Likely tuple length and result length did not match ({len(k)} vs {len(v)})')
-    return
+    return d
 
 def assign_name(fn: Callable, name: str) -> Callable:
     """
