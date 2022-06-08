@@ -12,7 +12,7 @@ from pydian.lib.util import has_content, remove_empty_values, update_dict
 from itertools import chain
 import re
 
-def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool = True) -> Any:
+def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) -> Any:
     """
     Evalutes the statement on the msg dict.
 
@@ -36,7 +36,7 @@ def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool = T
     return res
 
 
-def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None) -> dict:
+def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None, remove_empty: Optional[bool] = False) -> dict:
     """
     The main mapping function. Recursively evaluates and creates transformed JSON from input mapping
 
@@ -59,12 +59,12 @@ def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None) 
                     v = apply_mapping(msg, m)
                     vals.append(v) if has_content(v) else None
                 else:
-                    v = evaluate_mapping_statement(msg, m)
+                    v = evaluate_mapping_statement(msg, m, remove_empty=remove_empty)
                     vals.append(v) if has_content(v) else None
             update_dict(res, k, vals)
         # Primitive, or Function output
         else:
-            v = evaluate_mapping_statement(msg, mapping[k])
+            v = evaluate_mapping_statement(msg, mapping[k], remove_empty=remove_empty)
             update_dict(res, k, v)
     return res
 
@@ -153,7 +153,7 @@ def map_list(msg: dict, iter_over: Union[list, Callable], apply_fn: Callable) ->
     
     return list(res)
 
-def concat(msg: dict, items: list, remove_empty: bool) -> Any:
+def concat(msg: dict, items: tuple, remove_empty: bool) -> Any:
     """
     Takes all items in the list and adds them together (Python's + operator)
     """

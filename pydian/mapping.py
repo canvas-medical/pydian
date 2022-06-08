@@ -20,7 +20,7 @@ def map_list(iter_over: Union[list, Callable], apply_fn: Callable) -> Callable:
     partial_fn = partial(E.map_list, iter_over=iter_over, apply_fn=apply_fn)
     return assign_name(partial_fn, 'map_list')
 
-def concat(items: List[Any], remove_empty: Optional[bool] = False) -> Callable:
+def concat(*items, remove_empty: Optional[bool] = False) -> Callable:
     partial_fn = partial(E.concat, items=items, remove_empty=remove_empty)
     return assign_name(partial_fn, 'concat')
 
