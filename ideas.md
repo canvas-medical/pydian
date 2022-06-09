@@ -46,3 +46,11 @@ Query idea:
 }
 ```
 ... really is a filter function
+
+## Add `drop_object_if` at the parent-node instead of child node
+
+Think of it more like constraints, e.g. `keep_object_if`
+
+## Try to incorporate funcy things (which are already built)
+
+E.g. `get_in` is the same idea as the `nested_get` functionality with probably more support, can hook into that

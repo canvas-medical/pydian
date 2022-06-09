@@ -29,7 +29,7 @@ def test_drop_object_if():
     is_odd = lambda x: x % 2 == 1
     mapping = {
         'parent': {
-            'first': { 
+            'first_dropped': { 
                 ('CASE_drop_constant', M.drop_object_if(is_odd)): 123,
             },
             'second': {

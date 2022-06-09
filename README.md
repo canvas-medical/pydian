@@ -35,4 +35,34 @@ assert E.apply_mapping(example_source_data, EXAMPLE_MAPPING) == {
 }
 ```
 
-See the [mapping test examples](./tests/test_mapping.py) for a more involved look at some of the features + intended use-cases.
+See the [mapping test examples](./tests/test_mapping_values.py) for a more involved look at some of the features + intended use-cases.
+
+The `pydian.eval` library can also be used directly, e.g. adapting the above example:
+```python
+import pydian.eval as E
+
+example_source_data = {
+    'sourceId': 'Abc123',
+    'sourceName': 'Pydian Example'
+}
+
+assert {
+    'targetId': E.get(example_source_data, 'sourceId'),
+    'targetArray': [
+        E.get(example_source_data, 'sourceId'),
+        E.get(example_source_data, 'sourceName')
+    ],
+    'staticData': 'Any JSON primitive'
+} == {
+    'targetId': 'Abc123',
+    'targetArray': [
+        'Abc123',
+        'Pydian Example'
+    ],
+    'staticData': 'Any JSON primitive'
+}
+```
+
+The benefit of the `pydian.mapping` library is it allows better code portability (e.g. reusing components, organizing code in other files, etc.).
+
+This library is still in active developement and feedback is very welcome!
