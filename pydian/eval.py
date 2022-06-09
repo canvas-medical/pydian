@@ -119,7 +119,7 @@ def eval_then_apply(msg: dict, eval: Callable, apply: Callable) -> Any:
     if not (callable(eval) and callable(apply)):
         raise ValueError(f'One or both of the following is not callable:\n\t{eval}\n\t{apply}')
     l = eval(msg)
-    res = apply(l)
+    res = apply(l) if l else None
     return res
 
 def single_get(msg: dict, key: str, default: Any = None) -> Any:
