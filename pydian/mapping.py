@@ -1,8 +1,10 @@
 from typing import Union, Any, Callable, Optional, List
 import pydian.eval as E
 from pydian.lib.util import assign_name
+from pydian.lib.enums import RelativeObjectLevel as ROL
 from functools import partial
 
+""" Value-level Functions """
 def get(key: str, then: Optional[Callable] = None, default: Optional[Any] = None) -> Callable:
     partial_fn = partial(E.single_get, key=key, default=default)
     if '.' in key:
@@ -34,3 +36,9 @@ def lookup(val: Any, lookup_dict: dict, default: Optional[Any] = None) -> Callab
 def apply_mapping(mapping: dict, start_at_key: Optional[str] = None, remove_empty: bool = False) -> Callable:
     partial_fn = partial(E.apply_mapping, mapping=mapping, start_at_key=start_at_key, remove_empty=remove_empty)
     return assign_name(partial_fn, 'apply_mapping')
+
+""" Key-level Functions """
+def drop_object_if(cond: Callable, res: ROL = ROL.CURRENT) -> Optional[ROL]:
+    # TODO: Test this
+    partial_fn = partial(E.drop_object_if, cond=cond, res=res)
+    return assign_name(partial_fn, 'drop_object_if')

@@ -9,6 +9,7 @@ and compatible to be evaluated in mapping rules.
 from typing import Any, Optional, Union
 from collections.abc import Callable
 from pydian.lib.util import has_content, remove_empty_values, update_dict
+from pydian.lib.enums import RelativeObjectLevel as ROL, ToDeleteInfo, TO_DELETE_KEY
 from itertools import chain
 from copy import deepcopy
 import re
@@ -43,7 +44,13 @@ def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) ->
     return res
 
 
-def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None, remove_empty: bool = False) -> dict:
+def apply_mapping(msg: dict, mapping: dict, 
+                    start_at_key: Optional[str] = None, 
+                    remove_empty: bool = False,
+                    _state: dict = {
+                        TO_DELETE_KEY: []
+                    },
+                    _level: int = 0) -> dict:
     """
     The main mapping function. Recursively evaluates and creates transformed JSON from input mapping
 
@@ -53,32 +60,55 @@ def apply_mapping(msg: dict, mapping: dict, start_at_key: Optional[str] = None, 
     if start_at_key:
         local_msg = nested_get(local_msg, start_at_key)
     res = dict()
-    # Only use fields specified in mapping
+    # Go through the mapping dictionary and apply the functions.
+    #   Only use fields specified in mapping
     for k in mapping:
         # Dict (JSON Object)
         if type(mapping[k]) == dict:
-            v = apply_mapping(local_msg, mapping[k], remove_empty=remove_empty)
-            res = update_dict(res, k, v, remove_empty=remove_empty)
+            v = apply_mapping(local_msg, mapping[k], remove_empty=remove_empty, _state=_state, _level=_level + 1)
+            res = update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
         # List (JSON Array)
         elif type(mapping[k]) == list:
             vals = []
             for m in mapping[k]:
                 if type(m) == dict:
-                    v = apply_mapping(local_msg, m, remove_empty=remove_empty)
+                    v = apply_mapping(local_msg, m, _state, remove_empty=remove_empty, _state=_state, _level=_level + 1)
                     if not remove_empty or has_content(v):
                         vals.append(v)
                 else:
                     v = evaluate_mapping_statement(local_msg, m, remove_empty=remove_empty)
                     if not remove_empty or has_content(v):
                         vals.append(v)
-            res = update_dict(res, k, vals, remove_empty)
+            res = update_dict(res, k, vals, _state, _level, remove_empty=remove_empty)
         # Primitive, or Function output
         else:
             v = evaluate_mapping_statement(local_msg, mapping[k], remove_empty=remove_empty)
-            res = update_dict(res, k, v, remove_empty=remove_empty)
+            res = update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
+    # Once we return to the top-level, apply operations in _state dict
+    delete_list = _state.get(TO_DELETE_KEY) # this is a shared mutable pointer to the list
+    n_to_process = len(delete_list)
+    should_delete = False
+    for _ in range(n_to_process):
+        curr = delete_list.pop(0)
+        if type(curr) != ToDeleteInfo:
+            raise TypeError(f'Internal Pydian Error: _state to_delete list contained inappropriate value, got: {curr}')
+        # TODO come back to this
+        # If the current level is >= delete threshold, then attempt the delete.
+        #   Mark further deletes if there's a remaining difference
+        diff = _level - curr.delete_threshold
+        if diff >= 0:
+            if diff > 0:
+                rol = {
+                    1: ROL.PARENT,
+                    2: ROL.GRANDPARENT
+                }.get(diff, ROL.ENTIRE_OBJECT)
+                delete_list.append(ToDeleteInfo(key='_', rol=rol, level=_level))
+            should_delete = True
+    if should_delete:
+        return dict()
     return res
 
-
+""" Value-level Functions """
 def eval_then_apply(msg: dict, eval: Callable, apply: Callable) -> Any:
     """
     Evaluates the function, then appliies the second function
@@ -198,3 +228,17 @@ def lookup(msg: dict, val: Any, lookup_dict: dict, default: Any) -> Optional[Any
     if callable(val):
         val = evaluate_mapping_statement(msg, val, remove_empty=False)
     return lookup_dict.get(val, default)
+
+""" Key-Level Functions """
+
+def drop_object_if(val: Any, cond: Callable, res: ROL = ROL.CURRENT) -> Optional[ROL]:
+    """
+    Checks if the value returns True for the passed condition.
+
+    If true, returns the Relative Object Level (ROL) to delete,
+      else returns None.
+    """
+    if callable(cond):
+        if cond(val) == True:
+            return res
+    return None
