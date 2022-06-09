@@ -28,7 +28,7 @@ def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) ->
             res = statement(deepcopy(msg))
         # TODO: make sure exceptions here are nice
         except Exception as e:
-            raise ValueError(f'Function evaluation failed at statement {statement}, error: {e}')
+            raise ValueError(f'Function evaluation failed at statement: \n\t{statement},\nerror: \n\t{e}')
     elif type(statement) == list:
         res = [evaluate_mapping_statement(msg, s, remove_empty) for s in statement]
     elif type(statement) == dict:
@@ -72,7 +72,7 @@ def apply_mapping(msg: dict, mapping: dict,
             vals = []
             for m in mapping[k]:
                 if type(m) == dict:
-                    v = apply_mapping(local_msg, m, _state, remove_empty=remove_empty, _state=_state, _level=_level + 1)
+                    v = apply_mapping(local_msg, m, remove_empty=remove_empty, _state=_state, _level=_level + 1)
                     if not remove_empty or has_content(v):
                         vals.append(v)
                 else:
@@ -121,6 +121,11 @@ def eval_then_apply(msg: dict, eval: Callable, apply: Callable) -> Any:
     l = eval(msg)
     res = apply(l) if l else None
     return res
+
+def get(msg: dict, key: str, default: Any = None) -> Any:
+    if '.' in key:
+        return nested_get(msg, key, default)
+    return single_get(msg, key, default)
 
 def single_get(msg: dict, key: str, default: Any = None) -> Any:
     """
