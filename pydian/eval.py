@@ -100,8 +100,9 @@ def apply_mapping(msg: dict, mapping: dict,
             if diff > 0:
                 rol = {
                     1: ROL.PARENT,
-                    2: ROL.GRANDPARENT
-                }.get(diff, ROL.ENTIRE_OBJECT)
+                    2: ROL.GRANDPARENT,
+                    3: ROL.GREATGRANDPARENT
+                }.get(diff, ROL.CURRENT)
                 delete_list.append(ToDeleteInfo(key='_', rol=rol, level=_level))
             should_delete = True
     if should_delete:

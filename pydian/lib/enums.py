@@ -6,7 +6,8 @@ class RelativeObjectLevel(Enum):
     CURRENT = 0
     PARENT = 1
     GRANDPARENT = 2
-    ENTIRE_OBJECT = 100_000
+    GREATGRANDPARENT = 3
+    # ENTIRE_OBJECT = 100_000
 
 class ToDeleteInfo:
     def __init__(self, key: str, rol: RelativeObjectLevel, level: int):

@@ -39,6 +39,5 @@ def apply_mapping(mapping: dict, start_at_key: Optional[str] = None, remove_empt
 
 """ Key-level Functions """
 def drop_object_if(cond: Callable, res: ROL = ROL.CURRENT) -> Optional[ROL]:
-    # TODO: Test this
     partial_fn = partial(E.drop_object_if, cond=cond, res=res)
     return assign_name(partial_fn, 'drop_object_if')

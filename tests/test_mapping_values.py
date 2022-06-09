@@ -1,5 +1,5 @@
-import pydian.mapping as M
 import pydian.eval as E
+import pydian.mapping as M
 from functools import partial
 
 def test_get():
