@@ -6,22 +6,22 @@ from functools import partial
 def test_drop_object_if():
     source = {
         'data': {
-            "patient": {
-                "id": "abc123",
-                "active": True
+            'patient': {
+                'id': 'abc123',
+                'active': True
             }
         },
-        "list_data": [
+        'list_data': [
             {
-                "patient": {
-                    "id": "def456",
-                    "active": True
+                'patient': {
+                    'id': 'def456',
+                    'active': True
                 }
             },
             {
-                "patient": {
-                    "id": "ghi789",
-                    "active": False
+                'patient': {
+                    'id': 'ghi789',
+                    'active': False
                 }
             },
         ]
@@ -30,7 +30,7 @@ def test_drop_object_if():
     mapping = {
         'parent': {
             'first': { 
-                ("CASE_drop_constant", M.drop_object_if(is_odd)): 123,
+                ('CASE_drop_constant', M.drop_object_if(is_odd)): 123,
             },
             'second': {
                 ('CASE_keep_constant', M.drop_object_if(is_odd)): 124,
@@ -38,7 +38,7 @@ def test_drop_object_if():
         },
         'dropped_parent': {
             'first': { 
-                ("CASE_drop_constant", M.drop_object_if(is_odd, ROL.PARENT)): 123,
+                ('CASE_drop_constant', M.drop_object_if(is_odd, ROL.PARENT)): 123,
             },
             'second': {
                 ('CASE_keep_constant', M.drop_object_if(is_odd, ROL.PARENT)): 124,
@@ -52,7 +52,7 @@ def test_drop_object_if():
         'dropped_grandparent': {
             'inner': {
                 'first': { 
-                    ("CASE_drop_constant", M.drop_object_if(is_odd, ROL.GRANDPARENT)): 123,
+                    ('CASE_drop_constant', M.drop_object_if(is_odd, ROL.GRANDPARENT)): 123,
                 },
                 'second': {
                     ('CASE_keep_constant', M.drop_object_if(is_odd, ROL.GRANDPARENT)): 124,
@@ -70,7 +70,7 @@ def test_drop_object_if():
             'grandparent': {
                 'parent': {
                     'first': { 
-                        ("CASE_drop_constant", M.drop_object_if(is_odd, ROL.GREATGRANDPARENT)): 123,
+                        ('CASE_drop_constant', M.drop_object_if(is_odd, ROL.GREATGRANDPARENT)): 123,
                     },
                     'second': {
                         ('CASE_keep_constant', M.drop_object_if(is_odd, ROL.GREATGRANDPARENT)): 124,

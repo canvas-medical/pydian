@@ -5,35 +5,35 @@ from functools import partial
 def test_get():
     source = {
         'data': {
-            "patient": {
-                "id": "abc123",
-                "active": True
+            'patient': {
+                'id': 'abc123',
+                'active': True
             }
         },
-        "list_data": [
+        'list_data': [
             {
-                "patient": {
-                    "id": "def456",
-                    "active": True
+                'patient': {
+                    'id': 'def456',
+                    'active': True
                 }
             },
             {
-                "patient": {
-                    "id": "ghi789",
-                    "active": False
+                'patient': {
+                    'id': 'ghi789',
+                    'active': False
                 }
             },
         ]
     }
-    mod_fn = lambda msg: msg['data']['patient']['id'] + "_modified"
+    mod_fn = lambda msg: msg['data']['patient']['id'] + '_modified'
     mapping = {
-        "CASE_constant": 123,
+        'CASE_constant': 123,
         'CASE_single': M.get('data'),
-        "CASE_nested": M.get('data.patient.id'),
-        "CASE_nested_as_list": [
+        'CASE_nested': M.get('data.patient.id'),
+        'CASE_nested_as_list': [
             M.get('data.patient.active')
         ],
-        "CASE_modded": mod_fn,
+        'CASE_modded': mod_fn,
         'CASE_index_list': {
             'first': M.get('list_data[0].patient'),
             'second': M.get('list_data[1].patient'),
@@ -57,11 +57,11 @@ def test_get():
 
 def test_nested_get():
     source = {
-        "data": [{
-            "patient": {
-                "id": "abc123",
-                "active": True,
-                "ints": [1, 2, 3],
+        'data': [{
+            'patient': {
+                'id': 'abc123',
+                'active': True,
+                'ints': [1, 2, 3],
                 'dicts': [
                     {'num': 1},
                     {'num': 2}
@@ -69,10 +69,10 @@ def test_nested_get():
             }
         },
         {
-            "patient": {
-                "id": "def456",
-                "active": False,
-                "ints": [4, 5, 6],
+            'patient': {
+                'id': 'def456',
+                'active': False,
+                'ints': [4, 5, 6],
                 'dicts': [
                     {'num': 3},
                     {'num': 4}
@@ -80,10 +80,10 @@ def test_nested_get():
             }
         },
         {
-            "patient": {
-                "id": "ghi789",
-                "active": True,
-                "ints": [7, 8, 9],
+            'patient': {
+                'id': 'ghi789',
+                'active': True,
+                'ints': [7, 8, 9],
                 'dicts': [
                     {'num': 5},
                     {'num': 6}
@@ -91,9 +91,9 @@ def test_nested_get():
             }
         },
         {
-            "patient": {
-                "id": "jkl101112",
-                "active": True,
+            'patient': {
+                'id': 'jkl101112',
+                'active': True,
                 # 'ints' is deliberately missing
                 'dicts': [
                     {'num': 7}
@@ -103,9 +103,9 @@ def test_nested_get():
         ]
     }
     mapping = {
-        "CASE_constant": 123,
-        "CASE_unwrap_active": M.get('data[*].patient.active'),
-        "CASE_unwrap_id": M.get('data[*].patient.id'),
+        'CASE_constant': 123,
+        'CASE_unwrap_active': M.get('data[*].patient.active'),
+        'CASE_unwrap_id': M.get('data[*].patient.id'),
         'CASE_unwrap_list': M.get('data[*].patient.ints'),
         'CASE_unwrap_list_twice': M.get('data[*].patient.ints[*]'),
         'CASE_unwrap_list_dict': M.get('data[*].patient.dicts[*].num'),
