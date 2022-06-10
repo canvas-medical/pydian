@@ -301,3 +301,36 @@ def test_apply_mapping():
             'first_mod_again': mod_str(source.get('first')),
         }
     }
+
+def test_this_or():
+    source = {
+        'first': 'A',
+        'second': 'B'
+    }
+    mapping = {
+        'expectA': M.this_or(
+            M.get('first'),
+            M.get('second')
+        ),
+        'expectB': M.this_or(
+            M.get('third'),
+            M.get('second')
+        ),
+        'customA': M.this_or(
+            M.get('first'),
+            'NotFound',
+            this_if=lambda x: x == 'A'
+        ),
+        'customNotFound': M.this_or(
+            M.get('first'),
+            'NotFound',
+            this_if=lambda x: x == 'B'
+        )
+    }
+    res = E.apply_mapping(source, mapping)
+    assert res == {
+        'expectA': 'A',
+        'expectB': 'B',
+        'customA': 'A',
+        'customNotFound': 'NotFound'
+    }

@@ -243,6 +243,18 @@ def lookup(msg: dict, val: Any, lookup_dict: dict, default: Any) -> Optional[Any
         val = evaluate_mapping_statement(msg, val, remove_empty=False)
     return lookup_dict.get(val, default)
 
+def this_or(msg: dict, this: Any, or_that: Any, this_if: Callable = lambda x: x is not None) -> Callable:
+    """
+    Returns `this` if `this_if(this)` is True, else `or_that`
+
+    For `this` `or_that`, assumes a Callable means you want to execute it as a mapping statement.
+    """
+    if callable(this):
+        this = evaluate_mapping_statement(msg, this, remove_empty=False)
+    if callable(or_that):
+        or_that = evaluate_mapping_statement(msg, or_that, remove_empty=False)
+    return this if this_if(this) else or_that
+
 """ Key-Level Functions """
 
 def drop_object_if(val: Any, cond: Callable, res: ROL = ROL.CURRENT) -> Optional[ROL]:
