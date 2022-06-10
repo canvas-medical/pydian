@@ -9,7 +9,7 @@ and compatible to be evaluated in mapping rules.
 from typing import Any, Optional, Union
 from collections.abc import Callable
 from pydian.lib.util import has_content, remove_empty_values, update_dict
-from pydian.lib.enums import RelativeObjectLevel as ROL, ToDeleteInfo, TO_DELETE_KEY
+from pydian.lib.enums import RelativeObjectLevel as ROL, ToDeleteInfo, TO_DELETE_KEY, CURRENT_NESTING_KEY
 from itertools import chain
 from copy import deepcopy
 import re
@@ -43,12 +43,12 @@ def evaluate_mapping_statement(msg: dict, statement: Any, remove_empty: bool) ->
         res = remove_empty_values(res)
     return res
 
-
 def apply_mapping(msg: dict, mapping: dict, 
                     start_at_key: Optional[str] = None, 
                     remove_empty: bool = False,
                     _state: dict = {
-                        TO_DELETE_KEY: []
+                        TO_DELETE_KEY: [],
+                        CURRENT_NESTING_KEY: [],
                     },
                     _level: int = 0) -> dict:
     """
@@ -63,6 +63,7 @@ def apply_mapping(msg: dict, mapping: dict,
     # Go through the mapping dictionary and apply the functions.
     #   Only use fields specified in mapping
     for k in mapping:
+        _state.get(CURRENT_NESTING_KEY).append(k)
         # Dict (JSON Object)
         if type(mapping[k]) == dict:
             v = apply_mapping(local_msg, mapping[k], remove_empty=remove_empty, _state=_state, _level=_level + 1)
@@ -76,14 +77,21 @@ def apply_mapping(msg: dict, mapping: dict,
                     if not remove_empty or has_content(v):
                         vals.append(v)
                 else:
-                    v = evaluate_mapping_statement(local_msg, m, remove_empty=remove_empty)
+                    try:
+                        v = evaluate_mapping_statement(local_msg, m, remove_empty=remove_empty)
+                    except Exception as e:
+                        raise RuntimeError(f"Mapping key where error occurred: {'.'.join(_state.get(CURRENT_NESTING_KEY))}")
                     if not remove_empty or has_content(v):
                         vals.append(v)
             res = update_dict(res, k, vals, _state, _level, remove_empty=remove_empty)
         # Primitive, or Function output
         else:
-            v = evaluate_mapping_statement(local_msg, mapping[k], remove_empty=remove_empty)
+            try:
+                v = evaluate_mapping_statement(local_msg, mapping[k], remove_empty=remove_empty)
+            except Exception as e:
+                raise RuntimeError(f"Mapping key where error occurred: {'.'.join(_state.get(CURRENT_NESTING_KEY))}")
             res = update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
+        _state.get(CURRENT_NESTING_KEY).pop()
     # Once we return to the top-level, apply operations in _state dict
     delete_list = _state.get(TO_DELETE_KEY) # this is a shared mutable pointer to the list
     n_to_process = len(delete_list)

@@ -1,7 +1,7 @@
 from enum import Enum
 
 TO_DELETE_KEY = 'to_delete'
-
+CURRENT_NESTING_KEY = 'current_nesting'
 class RelativeObjectLevel(Enum):
     CURRENT = 0
     PARENT = 1
