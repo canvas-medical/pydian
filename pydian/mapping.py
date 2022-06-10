@@ -6,9 +6,7 @@ from functools import partial
 
 """ Value-level Functions """
 def get(key: str, then: Optional[Callable] = None, default: Optional[Any] = None) -> Callable:
-    partial_fn = partial(E.single_get, key=key, default=default)
-    if '.' in key:
-        partial_fn = partial(E.nested_get, key=key, default=default)
+    partial_fn = partial(E.get, key=key, default=default)
     if then:
         partial_fn = eval_then_apply(partial_fn, then)
     return assign_name(partial_fn, 'get')
@@ -29,8 +27,8 @@ def filter_list(*items, filter_expr: Callable, remove_empty: bool = False) -> Ca
     partial_fn = partial(E.filter_list, items=items, filter_expr=filter_expr, remove_empty=remove_empty)
     return assign_name(partial_fn, 'filter_list')
 
-def lookup(val: Any, lookup_dict: dict, default: Optional[Any] = None) -> Callable:
-    partial_fn = partial(E.lookup, val=val, lookup_dict=lookup_dict, default=default)
+def lookup(val: Any, from_dict: dict, default: Optional[Any] = None) -> Callable:
+    partial_fn = partial(E.lookup, val=val, lookup_dict=from_dict, default=default)
     return assign_name(partial_fn, 'lookup')
 
 def apply_mapping(mapping: dict, start_at_key: Optional[str] = None, remove_empty: bool = False) -> Callable:
