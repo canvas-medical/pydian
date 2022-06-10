@@ -44,36 +44,6 @@ def has_content(obj: Any) -> bool:
             res = res and inner_res
     return res
 
-def update_dict(msg: dict, k: Union[str, tuple], v: Any, _state: dict, _level: int, remove_empty: bool) -> dict:
-    """
-    Updates the input dict `d` inplace with `k`, `v` if `v` has content. 
-    Also handles joint key case (passed via a tuple)
-    """
-    d = deepcopy(msg)
-    if not remove_empty or has_content(v):
-        # check for tuple keys
-        if type(k) == str:
-            d.update({k: v})
-        elif type(k) == tuple:
-            # Expect any conditional logic in the last spot.
-            #  Assume if it's not, then we only have string keys
-            fn = k[-1]
-            vals = v if type(v) == list else [v]
-            if callable(fn):
-                keys = k[0:-1]
-                for i in range(len(vals)):
-                    res = fn(vals[i])
-                    if res:
-                        _state.get(TO_DELETE_KEY).append(ToDeleteInfo(keys[i], res, _level))
-            else:
-                keys = k
-            # Allow multi-str keys
-            try:
-                d.update({keys[i]: vals[i] for i in range(len(keys))})
-            except:
-                raise ValueError(f'Dictionary insert failed. Likely tuple length and result length did not match ({keys} vs {v})')
-    return d
-
 def assign_name(fn: Callable, name: str) -> Callable:
     """
     Assigns name to object (intended for functions)

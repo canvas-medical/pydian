@@ -148,9 +148,9 @@ def test_eval_then_apply():
     }
     res = E.apply_mapping(source, mapping)
     assert res == {
-        'CASE_int': add_one(E.single_get(source, 'int')),
-        'CASE_float': add_one(E.single_get(source, 'float')),
-        'CASE_str': append_one(E.single_get(source, 'str'))
+        'CASE_int': add_one(E.get(source, 'int')),
+        'CASE_float': add_one(E.get(source, 'float')),
+        'CASE_str': append_one(E.get(source, 'str'))
     }
 
 def test_map_list():

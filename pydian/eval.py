@@ -8,7 +8,7 @@ and compatible to be evaluated in mapping rules.
 
 from typing import Any, Optional, Union
 from collections.abc import Callable
-from pydian.lib.util import has_content, remove_empty_values, update_dict
+from pydian.lib.util import has_content, remove_empty_values
 from pydian.lib.enums import RelativeObjectLevel as ROL, ToDeleteInfo, TO_DELETE_KEY, CURRENT_NESTING_KEY
 from itertools import chain
 from copy import deepcopy
@@ -58,7 +58,7 @@ def apply_mapping(msg: dict, mapping: dict,
     """
     local_msg = deepcopy(msg)
     if start_at_key:
-        local_msg = nested_get(local_msg, start_at_key)
+        local_msg = _nested_get(local_msg, start_at_key)
     res = dict()
     # Go through the mapping dictionary and apply the functions.
     #   Only use fields specified in mapping
@@ -67,7 +67,7 @@ def apply_mapping(msg: dict, mapping: dict,
         # Dict (JSON Object)
         if type(mapping[k]) == dict:
             v = apply_mapping(local_msg, mapping[k], remove_empty=remove_empty, _state=_state, _level=_level + 1)
-            res = update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
+            res = _update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
         # List (JSON Array)
         elif type(mapping[k]) == list:
             vals = []
@@ -83,14 +83,14 @@ def apply_mapping(msg: dict, mapping: dict,
                         raise RuntimeError(f"Mapping key where error occurred: {'.'.join(_state.get(CURRENT_NESTING_KEY))}")
                     if not remove_empty or has_content(v):
                         vals.append(v)
-            res = update_dict(res, k, vals, _state, _level, remove_empty=remove_empty)
+            res = _update_dict(res, k, vals, _state, _level, remove_empty=remove_empty)
         # Primitive, or Function output
         else:
             try:
                 v = evaluate_mapping_statement(local_msg, mapping[k], remove_empty=remove_empty)
             except Exception as e:
                 raise RuntimeError(f"Mapping key where error occurred: {'.'.join(_state.get(CURRENT_NESTING_KEY))}")
-            res = update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
+            res = _update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
         _state.get(CURRENT_NESTING_KEY).pop()
     # Once we return to the top-level, apply operations in _state dict
     delete_list = _state.get(TO_DELETE_KEY) # this is a shared mutable pointer to the list
@@ -132,64 +132,8 @@ def eval_then_apply(msg: dict, eval: Callable, apply: Callable) -> Any:
 
 def get(msg: dict, key: str, default: Any = None) -> Any:
     if '.' in key:
-        return nested_get(msg, key, default)
-    return single_get(msg, key, default)
-
-def single_get(msg: dict, key: str, default: Any = None) -> Any:
-    """
-    Gets single item, supports int indexing, e.g. `someKey[0]`
-
-    If indexing a dict, use `nested_get` instead
-    """
-    res = msg
-    idx = re.search(r'\[\d+\]', key)
-    if idx:
-        idx_str = idx.group(0)
-        # Cast the index (e.g. "[0]") to an int (e.g. 0)
-        i = int(idx_str[1:-1])
-        key = key.replace(idx_str, '')
-        res = res.get(key)
-        res = res[i] if i in range(len(res)) else None
-    else:
-        res = res.get(key, default)
-    return res
-
-def nested_get(msg: dict, key: str, default: Any = None) -> Any:
-    """
-    Expects `.`-delimited string and tries to get the item in the dict.
-
-    If the dict contains an array, the correct index is expected, e.g. for a dict d:
-        d.a.b[0]
-      will try d['a']['b'][0], where a should be a dict containing b which should be an array with at least 1 item
-
-    If d[*] is passed, then that means return a list of all elements. E.g. for a dict d:
-       d[*].a.b
-     will try to get e['a']['b'] for e in d
-    
-    TODO: Add support for querying, maybe e.g. [?: thing.val==1]
-    """
-    stack = key.split('.')[::-1]
-    res = deepcopy(msg)
-    while len(stack) > 0:
-        k = stack.pop()
-        # If need to unwrap, then empty stack 
-        if '[*]' in k:
-            k = k.replace('[*]', '')
-            remaining_key = '.'.join(stack[::-1])
-            stack = []
-            res = res.get(k)
-            if remaining_key != '':
-                res = [nested_get(v, remaining_key, None) for v in res]
-        else:
-            res = single_get(res, k)
-        if res == None:
-            break
-    # HACK: Handle unwrapping if specified at the end
-    # TODO: Find a nicer way to do this. Works for now...
-    if key[-3:] == '[*]' and type(res) == list and type(res[0]) == list:
-        res = [l for l in res if l != None]
-        res = list(chain(*res))
-    return res if res != None else default
+        return _nested_get(msg, key, default)
+    return _single_get(msg, key, default)
 
 def map_list(msg: dict, iter_over: Union[list, Callable], apply_fn: Callable, remove_empty: bool = False) -> list:
     """
@@ -268,3 +212,91 @@ def drop_object_if(val: Any, cond: Callable, res: ROL = ROL.CURRENT) -> Optional
         if cond(val) == True:
             return res
     return None
+
+""" "Internal" Functions """
+
+def _single_get(msg: dict, key: str, default: Any = None) -> Any:
+    """
+    Gets single item, supports int indexing, e.g. `someKey[0]`
+
+    If indexing a dict, use `_nested_get` instead
+    """
+    res = msg
+    idx = re.search(r'\[\d+\]', key)
+    if idx:
+        idx_str = idx.group(0)
+        # Cast the index (e.g. "[0]") to an int (e.g. 0)
+        i = int(idx_str[1:-1])
+        key = key.replace(idx_str, '')
+        res = res.get(key)
+        res = res[i] if i in range(len(res)) else None
+    else:
+        res = res.get(key, default)
+    return res
+
+def _nested_get(msg: dict, key: str, default: Any = None) -> Any:
+    """
+    Expects `.`-delimited string and tries to get the item in the dict.
+
+    If the dict contains an array, the correct index is expected, e.g. for a dict d:
+        d.a.b[0]
+      will try d['a']['b'][0], where a should be a dict containing b which should be an array with at least 1 item
+
+    If d[*] is passed, then that means return a list of all elements. E.g. for a dict d:
+       d[*].a.b
+     will try to get e['a']['b'] for e in d
+    
+    TODO: Add support for querying, maybe e.g. [?: thing.val==1]
+    """
+    stack = key.split('.')[::-1]
+    res = deepcopy(msg)
+    while len(stack) > 0:
+        k = stack.pop()
+        # If need to unwrap, then empty stack 
+        if '[*]' in k:
+            k = k.replace('[*]', '')
+            remaining_key = '.'.join(stack[::-1])
+            stack = []
+            res = res.get(k)
+            if remaining_key != '':
+                res = [_nested_get(v, remaining_key, None) for v in res]
+        else:
+            res = _single_get(res, k)
+        if res == None:
+            break
+    # HACK: Handle unwrapping if specified at the end
+    # TODO: Find a nicer way to do this. Works for now...
+    if key[-3:] == '[*]' and type(res) == list and type(res[0]) == list:
+        res = [l for l in res if l != None]
+        res = list(chain(*res))
+    return res if res != None else default
+
+def _update_dict(msg: dict, k: Union[str, tuple], v: Any, _state: dict, _level: int, remove_empty: bool) -> dict:
+    """
+    Updates the input dict `d` inplace with `k`, `v` if `v` has content. 
+    Also handles joint key case (passed via a tuple)
+    """
+    d = deepcopy(msg)
+    if not remove_empty or has_content(v):
+        # check for tuple keys
+        if type(k) == str:
+            d.update({k: v})
+        elif type(k) == tuple:
+            # Expect any conditional logic in the last spot.
+            #  Assume if it's not, then we only have string keys
+            fn = k[-1]
+            vals = v if type(v) == list else [v]
+            if callable(fn):
+                keys = k[0:-1]
+                for i in range(len(vals)):
+                    res = fn(vals[i])
+                    if res:
+                        _state.get(TO_DELETE_KEY).append(ToDeleteInfo(keys[i], res, _level))
+            else:
+                keys = k
+            # Allow multi-str keys
+            try:
+                d.update({keys[i]: vals[i] for i in range(len(keys))})
+            except:
+                raise ValueError(f'Dictionary insert failed. Likely tuple length and result length did not match ({keys} vs {v})')
+    return d
