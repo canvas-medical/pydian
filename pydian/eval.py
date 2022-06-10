@@ -60,10 +60,14 @@ def apply_mapping(msg: dict, mapping: dict,
     if start_at_key:
         local_msg = _nested_get(local_msg, start_at_key)
     res = dict()
+    should_keep = lambda x: not remove_empty or has_content(x)
+    
     # Go through the mapping dictionary and apply the functions.
     #   Only use fields specified in mapping
     for k in mapping:
+        # Append key state for error stack trace (if it shows up)
         _state.get(CURRENT_NESTING_KEY).append(k)
+
         # Dict (JSON Object)
         if type(mapping[k]) == dict:
             v = apply_mapping(local_msg, mapping[k], remove_empty=remove_empty, _state=_state, _level=_level + 1)
@@ -74,14 +78,14 @@ def apply_mapping(msg: dict, mapping: dict,
             for m in mapping[k]:
                 if type(m) == dict:
                     v = apply_mapping(local_msg, m, remove_empty=remove_empty, _state=_state, _level=_level + 1)
-                    if not remove_empty or has_content(v):
+                    if should_keep(v):
                         vals.append(v)
                 else:
                     try:
                         v = evaluate_mapping_statement(local_msg, m, remove_empty=remove_empty)
                     except Exception as e:
                         raise RuntimeError(f"Mapping key where error occurred: {'.'.join(_state.get(CURRENT_NESTING_KEY))}")
-                    if not remove_empty or has_content(v):
+                    if should_keep(v):
                         vals.append(v)
             res = _update_dict(res, k, vals, _state, _level, remove_empty=remove_empty)
         # Primitive, or Function output
@@ -91,28 +95,12 @@ def apply_mapping(msg: dict, mapping: dict,
             except Exception as e:
                 raise RuntimeError(f"Mapping key where error occurred: {'.'.join(_state.get(CURRENT_NESTING_KEY))}")
             res = _update_dict(res, k, v, _state, _level, remove_empty=remove_empty)
+        
+        # No error showed up for this key - remove it!
         _state.get(CURRENT_NESTING_KEY).pop()
+
     # Once we return to the top-level, apply operations in _state dict
-    delete_list = _state.get(TO_DELETE_KEY) # this is a shared mutable pointer to the list
-    n_to_process = len(delete_list)
-    should_delete = False
-    for _ in range(n_to_process):
-        curr = delete_list.pop(0)
-        if type(curr) != ToDeleteInfo:
-            raise TypeError(f'Internal Pydian Error: _state to_delete list contained inappropriate value, got: {curr}')
-        # TODO come back to this
-        # If the current level is >= delete threshold, then attempt the delete.
-        #   Mark further deletes if there's a remaining difference
-        diff = _level - curr.delete_threshold
-        if diff >= 0:
-            if diff > 0:
-                rol = {
-                    1: ROL.PARENT,
-                    2: ROL.GRANDPARENT,
-                    3: ROL.GREATGRANDPARENT
-                }.get(diff, ROL.CURRENT)
-                delete_list.append(ToDeleteInfo(key='_', rol=rol, level=_level))
-            should_delete = True
+    should_delete = _update_to_delete(_state, _level)
     if should_delete:
         return dict()
     return res
@@ -273,30 +261,57 @@ def _nested_get(msg: dict, key: str, default: Any = None) -> Any:
 
 def _update_dict(msg: dict, k: Union[str, tuple], v: Any, _state: dict, _level: int, remove_empty: bool) -> dict:
     """
-    Updates the input dict `d` inplace with `k`, `v` if `v` has content. 
+    INTERNAL: Updates the input dict `d` inplace with `k`, `v` if `v` has content. 
     Also handles joint key case (passed via a tuple)
     """
     d = deepcopy(msg)
-    if not remove_empty or has_content(v):
-        # check for tuple keys
-        if type(k) == str:
-            d.update({k: v})
-        elif type(k) == tuple:
-            # Expect any conditional logic in the last spot.
-            #  Assume if it's not, then we only have string keys
-            fn = k[-1]
-            vals = v if type(v) == list else [v]
-            if callable(fn):
-                keys = k[0:-1]
-                for i in range(len(vals)):
-                    res = fn(vals[i])
-                    if res:
-                        _state.get(TO_DELETE_KEY).append(ToDeleteInfo(keys[i], res, _level))
-            else:
-                keys = k
-            # Allow multi-str keys
+    should_keep = not remove_empty or has_content(v)
+    # check for tuple keys
+    if type(k) == str and should_keep:
+        d.update({k: v})
+    elif type(k) == tuple:
+        # Expect any conditional logic in the last spot.
+        #  Assume if it's not, then we only have string keys
+        fn = k[-1]
+        vals = v if type(v) == list else [v]
+        if callable(fn):
+            keys = k[0:-1]
+            for i in range(len(vals)):
+                res = fn(vals[i])
+                if res:
+                    _state.get(TO_DELETE_KEY).append(ToDeleteInfo(keys[i], res, _level))
+        else:
+            keys = k
+        # Allow multi-str keys
+        if should_keep:
             try:
                 d.update({keys[i]: vals[i] for i in range(len(keys))})
             except:
                 raise ValueError(f'Dictionary insert failed. Likely tuple length and result length did not match ({keys} vs {v})')
     return d
+
+def _update_to_delete(_state: dict, _level: int) -> bool:
+    """
+    INTERNAL: Modifies the `_state` dict based on the current object.
+    """
+    delete_list = _state.get(TO_DELETE_KEY) # this is a shared mutable pointer to the list
+    n_to_process = len(delete_list)
+    should_delete = False
+    for _ in range(n_to_process):
+        curr = delete_list.pop(0)
+        if type(curr) != ToDeleteInfo:
+            raise TypeError(f'Internal Pydian Error: _state to_delete list contained inappropriate value, got: {curr}')
+        # TODO come back to this
+        # If the current level is >= delete threshold, then attempt the delete.
+        #   Mark further deletes if there's a remaining difference
+        diff = _level - curr.delete_threshold
+        if diff >= 0:
+            if diff > 0:
+                rol = {
+                    1: ROL.PARENT,
+                    2: ROL.GRANDPARENT,
+                    3: ROL.GREATGRANDPARENT
+                }.get(diff, ROL.CURRENT)
+                delete_list.append(ToDeleteInfo(key=f'_{curr.key}', rol=rol, level=_level))
+            should_delete = True
+    return should_delete
