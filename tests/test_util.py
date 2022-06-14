@@ -8,8 +8,10 @@ def test_removing_empty_values():
         (['a', [], None], ['a']),
         # Dict cases
         ({'empty_list': [], 'empty_dict': {}}, {}),
-        ({'empty_list': [], 'empty_dict': {}, 'a': 'b'}, {'a': 'b'})
+        ({'empty_list': [], 'empty_dict': {}, 'a': 'b'}, {'a': 'b'}),
         # Nested cases
+        ({'empty_list': [{}, {}, {}], 'empty_dict': { 'someKey': {} }}, {}),
+        ([{}, ['', None], [{'empty': {'dict': {'key': None}}}]], [])
     ]
 
     for init, expected_out in test_cases:
