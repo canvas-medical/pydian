@@ -35,7 +35,7 @@ def test_get():
             'CASE_nested_as_list': [
                 m.get('data.patient.active')
             ],
-            'CASE_modded': mod_fn(m.source),
+            'CASE_modded': mod_fn(m.src),
             'CASE_index_list': {
                 'first': m.get('list_data[0].patient'),
                 'second': m.get('list_data[1].patient'),

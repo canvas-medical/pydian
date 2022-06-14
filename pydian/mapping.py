@@ -4,13 +4,13 @@ from copy import deepcopy
 from itertools import chain
 from pydian.lib.util import remove_empty_values
 
-class DictWrapper(dict):
+class DictWrapper:
     def __init__(self, source: dict) -> None:
         super()
-        self.source = source
+        self.src = source
     
     def get(self, key: str, default: Any = None, then: Callable | None = None) -> Any:
-        res = DictWrapper.nested_get(self.source, key, default)
+        res = DictWrapper.nested_get(self.src, key, default)
         if res and callable(then):
             try:
                 res = then(res)
