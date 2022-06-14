@@ -4,8 +4,9 @@ from copy import deepcopy
 from itertools import chain
 from pydian.lib.util import remove_empty_values
 
-class DictWrapper:
+class DictWrapper(dict):
     def __init__(self, source: dict) -> None:
+        super()
         self.source = source
     
     def get(self, key: str, default: Any = None, then: Callable | None = None) -> Any:

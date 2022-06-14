@@ -1,4 +1,7 @@
 from pydian import Mapper, DictWrapper
+from pydian import nested_get, single_get
+
+# TODO: Use fixtures
 
 def test_get():
     source = {
@@ -54,6 +57,63 @@ def test_get():
             'second': source['list_data'][1]['patient']
         }
     }
+
+def test_get_alt_syntax():
+    source = {
+        'data': {
+            'patient': {
+                'id': 'abc123',
+                'active': True
+            }
+        },
+        'list_data': [
+            {
+                'patient': {
+                    'id': 'def456',
+                    'active': True
+                }
+            },
+            {
+                'patient': {
+                    'id': 'ghi789',
+                    'active': False
+                }
+            },
+        ]
+    }
+    mod_fn = lambda msg: msg['data']['patient']['id'] + '_modified'
+    def mapping(m: dict) -> dict:
+        return {
+            'CASE_constant': 123,
+            'CASE_single': single_get(m, 'data'),
+            'CASE_nested': nested_get(m, 'data.patient.id'),
+            'CASE_nested_as_list': [
+                nested_get(m, 'data.patient.active')
+            ],
+            'CASE_modded': mod_fn(m),
+            'CASE_index_list': {
+                'first': nested_get(m, 'list_data[0].patient'),
+                'second': nested_get(m, 'list_data[1].patient'),
+                'out_of_bounds': nested_get(m, 'list_data[2].patient')
+            }
+        }
+    # Note syntax difference
+    res = mapping(source)
+    assert res == {
+        'CASE_constant': 123,
+        'CASE_single': source.get('data'),
+        'CASE_nested': source['data']['patient']['id'],
+        'CASE_nested_as_list': [
+            source['data']['patient']['active']
+        ],
+        'CASE_modded': mod_fn(source),
+        'CASE_index_list': {
+            'first': source['list_data'][0]['patient'],
+            'second': source['list_data'][1]['patient'],
+            'out_of_bounds': None # This _doesn't_ get deleted 
+        }
+    }
+
 
 def test_nested_get():
     source = {
