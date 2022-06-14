@@ -11,13 +11,13 @@ class DictWrapper(dict):
     
     def get(self, key: str, default: Any = None, then: Callable | None = None) -> Any:
         res = DictWrapper.nested_get(self.source, key, default)
-        if callable(then):
+        if res and callable(then):
             try:
                 res = then(res)
             except Exception as e:
                 raise RuntimeError(f'`then` callable failed when getting key: {key}, error: {e}')
         return res
-    
+
     @staticmethod
     def single_get(msg: dict, key: str, default: Any = None) -> Any:
         """
