@@ -1,5 +1,5 @@
 from pydian import Mapper, DictWrapper
-from pydian import nested_get, single_get
+from pydian import get
 
 # TODO: Use fixtures
 
@@ -31,15 +31,15 @@ def test_get():
         return {
             'CASE_constant': 123,
             'CASE_single': m.get('data'),
-            'CASE_nested': m.get('data.patient.id'),
+            'CASE_nested': m.getn('data.patient.id'),
             'CASE_nested_as_list': [
-                m.get('data.patient.active')
+                m.getn('data.patient.active')
             ],
-            'CASE_modded': mod_fn(m.src),
+            'CASE_modded': mod_fn(m),
             'CASE_index_list': {
-                'first': m.get('list_data[0].patient'),
-                'second': m.get('list_data[1].patient'),
-                'out_of_bounds': m.get('list_data[2].patient')
+                'first': m.getn('list_data[0].patient'),
+                'second': m.getn('list_data[1].patient'),
+                'out_of_bounds': m.getn('list_data[2].patient')
             }
         }
     mapper = Mapper(mapping, remove_empty=True)
@@ -85,16 +85,16 @@ def test_get_alt_syntax():
     def mapping(m: dict) -> dict:
         return {
             'CASE_constant': 123,
-            'CASE_single': single_get(m, 'data'),
-            'CASE_nested': nested_get(m, 'data.patient.id'),
+            'CASE_single': get(m, 'data'),
+            'CASE_nested': get(m, 'data.patient.id'),
             'CASE_nested_as_list': [
-                nested_get(m, 'data.patient.active')
+                get(m, 'data.patient.active')
             ],
             'CASE_modded': mod_fn(m),
             'CASE_index_list': {
-                'first': nested_get(m, 'list_data[0].patient'),
-                'second': nested_get(m, 'list_data[1].patient'),
-                'out_of_bounds': nested_get(m, 'list_data[2].patient')
+                'first': get(m, 'list_data[0].patient'),
+                'second': get(m, 'list_data[1].patient'),
+                'out_of_bounds': get(m, 'list_data[2].patient')
             }
         }
     # Note syntax difference
@@ -165,12 +165,12 @@ def test_nested_get():
     def mapping(m: DictWrapper):
         return {
             'CASE_constant': 123,
-            'CASE_unwrap_active': m.get('data[*].patient.active'),
-            'CASE_unwrap_id': m.get('data[*].patient.id'),
-            'CASE_unwrap_list': m.get('data[*].patient.ints'),
-            'CASE_unwrap_list_twice': m.get('data[*].patient.ints[*]'),
-            'CASE_unwrap_list_dict': m.get('data[*].patient.dicts[*].num'),
-            'CASE_unwrap_list_dict_twice': m.get('data[*].patient.dicts[*].num[*]')
+            'CASE_unwrap_active': m.getn('data[*].patient.active'),
+            'CASE_unwrap_id': m.getn('data[*].patient.id'),
+            'CASE_unwrap_list': m.getn('data[*].patient.ints'),
+            'CASE_unwrap_list_twice': m.getn('data[*].patient.ints[*]'),
+            'CASE_unwrap_list_dict': m.getn('data[*].patient.dicts[*].num'),
+            'CASE_unwrap_list_dict_twice': m.getn('data[*].patient.dicts[*].num[*]')
         }
     mapper = Mapper(mapping, remove_empty=True)
     res = mapper.run(source)
@@ -212,9 +212,9 @@ def test_conditional_drop():
             'CASE_not_found': m.get('schmayda'),
             'CASE_constant': 123,
             'CASE_single': m.get('data'),
-            'CASE_nested': m.get('data.patient.id'),
+            'CASE_nested': m.getn('data.patient.id'),
             'CASE_nested_as_list': [
-                m.get('data.patient.active')
+                m.getn('data.patient.active')
             ],
         }
     cond_drop = {
