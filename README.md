@@ -29,7 +29,7 @@ def example_mapping(m: DictWrapper):
             m.get('sourceId'),
             m.get('sourceName')
         ],
-        'targetNested': m.get('sourceNested.some.nested.value'),
+        'targetNested': m.getn('sourceNested.some.nested.value'),
         'staticData': 'Any JSON primitive',
     }
 
@@ -50,7 +50,7 @@ See the [mapping test examples](./tests/test_mapping.py) for a more involved loo
 
 The `DictWrapper` class is there for convenience -- this is equivalent:
 ```python
-from pydian import single_get, nested_get
+from pydian import get
 
 # Same example as above
 example_source_data = {
@@ -67,12 +67,12 @@ example_source_data = {
 
 def example_mapping(m: dict):
     return {
-        'targetId': single_get(m, 'sourceId'),
+        'targetId': get(m, 'sourceId'),
         'targetArray': [
-            single_get(m, 'sourceId'),
-            single_get(m, 'sourceName')
+            get(m, 'sourceId'),
+            get(m, 'sourceName')
         ],
-        'targetNested': nested_get(m, 'sourceNested.some.nested.value'),
+        'targetNested': get(m, 'sourceNested.some.nested.value'),
         'staticData': 'Any JSON primitive',
     }
 
