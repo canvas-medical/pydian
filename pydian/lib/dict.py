@@ -23,9 +23,10 @@ def single_get(msg: dict, key: str, default: Any = None) -> Any:
     res = msg
     idx = re.search(r'\[\d+\]', key)
     if idx:
+        # TODO: consolidate str logic into shared functions
+        #       E.g. have `_clean_idx` handle this case 
         idx_str = idx.group(0)
-        # Cast the index (e.g. "[0]") to an int (e.g. 0)
-        i = int(idx_str[1:-1])
+        i = int(idx_str[1:-1]) # Casts str->int, e.g. "[0]" -> 0
         key = key.replace(idx_str, '')
         res = res.get(key, [])
         res = res[i] if i in range(len(res)) else None
@@ -80,14 +81,13 @@ def nested_delete(msg: dict, key: str) -> dict:
     res = deepcopy(msg)
     curr = res
     nesting = key.split('.')
+    nesting = list(map(_clean_idx, nesting))
     # Get up to the last key in nesting, then try to pop that key
     for i in nesting[:-1]:
         # TODO: Handle [*] case
-        # TODO: Handle [i] case
         curr = curr[i]
     try:
         # TODO: Handle [*] case
-        # TODO: Handle [i] case
         del curr[nesting[-1]]
     except Exception as e:
         raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}')
@@ -100,3 +100,15 @@ def _handle_ending_star_unwrap(res: dict, key: str) -> dict:
         res = [l for l in res if l != None]
         res = list(chain(*res))
     return res
+
+def _clean_idx(s: str) -> int | str:
+    """
+    Cleans "[0]" -> 0, otherwise returns original str
+    """
+    KEY_INDEX_RE = r"(?:\[[\'\"]*(\-?[\d]+)[\'\"]*\]){1}$"
+    matches = re.findall(KEY_INDEX_RE, s)
+    if matches:
+        s = re.sub(KEY_INDEX_RE, "", s)
+        index = int(matches[0])
+        return index
+    return s

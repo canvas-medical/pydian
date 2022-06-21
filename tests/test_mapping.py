@@ -223,7 +223,17 @@ def test_rol_drop(simple_data):
                 'CASE_curr_keep': {
                     'id': get(m, 'data.patient.id', drop_rol=ROL.CURRENT)
                 }
-            }
+            },
+            'CASE_list': [
+                {
+                    'a': get(m, 'notFoundKey', drop_rol=ROL.CURRENT),
+                    'b': 'someValue'
+                },
+                {   
+                    'a': 'someValue',
+                    'b': 'someValue'
+                },
+            ]
         }
     mapper = Mapper(mapping, remove_empty=True)
     res = mapper(source)
@@ -232,5 +242,11 @@ def test_rol_drop(simple_data):
             'CASE_curr_keep': {
                 'id': get(source, 'data.patient.id')
             }
-        }
+        },
+        'CASE_list': [
+            {   
+                'a': 'someValue',
+                'b': 'someValue'
+            }
+        ]
     }
