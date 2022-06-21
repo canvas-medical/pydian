@@ -2,8 +2,9 @@ from typing import Any, Callable
 import re
 from copy import deepcopy
 from itertools import chain
+from .enums import RelativeObjectLevel as ROL
 
-def get(msg: dict, key: str, default: Any = None, then: Callable | None = None):
+def get(msg: dict, key: str, default: Any = None, then: Callable | None = None, drop_rol: ROL | None = None):
     res = nested_get(msg, key, default) \
         if '.' in key else single_get(msg, key, default)
     if res and callable(then):
@@ -11,6 +12,8 @@ def get(msg: dict, key: str, default: Any = None, then: Callable | None = None):
             res = then(res)
         except Exception as e:
             raise RuntimeError(f'`then` callable failed when getting key: {key}, error: {e}')
+    if drop_rol and res is None:
+        res = drop_rol
     return res
 
 def single_get(msg: dict, key: str, default: Any = None) -> Any:
@@ -76,14 +79,18 @@ def nested_delete(msg: dict, key: str) -> dict:
     """
     res = deepcopy(msg)
     curr = res
-    keys = key.split('.')
-    # TODO: Handle [*] case
-    for k in keys[:-1]:
-        curr = curr.get(k)
+    nesting = key.split('.')
+    # Get up to the last key in nesting, then try to pop that key
+    for i in nesting[:-1]:
+        # TODO: Handle [*] case
+        # TODO: Handle [i] case
+        curr = curr[i]
     try:
-        curr.pop(keys[-1])
+        # TODO: Handle [*] case
+        # TODO: Handle [i] case
+        del curr[nesting[-1]]
     except Exception as e:
-        raise IndexError(f'Failed to perform nested_delete on key: {key}')
+        raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}')
     return res
 
 def _handle_ending_star_unwrap(res: dict, key: str) -> dict:
