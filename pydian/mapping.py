@@ -53,9 +53,11 @@ class Mapper:
                 raise TypeError(f'The conditionally_drop dict can only map `str->(str | set)`, got: {(k, v)}')
         self.conditionally_drop = conditionally_drop
 
-    def __call__(self, source: dict) -> dict:
+    def __call__(self, source: dict, **kwargs: Any) -> dict:
         try:
-            res = self.map_fn(DictWrapper(source))
+            if type(source) == dict:
+                source = DictWrapper(source)
+            res = self.map_fn(source, **kwargs)
             assert issubclass(type(res), dict)
         except Exception as e:
             raise RuntimeError(f'Failed to call {self.map_fn} on source data. Error: {e}')
@@ -74,30 +76,7 @@ class Mapper:
 
         # Remove the keys to drop
         for k in keys_to_drop:
-            # Case: ROL received during runtime
-            if type(get(res, k)) == ROL:
-                rol = get(res, k)
-                key_parts = k.split('.')
-                # Split by list index as well, e.g. `some.key[1]`, the parent of `key[1]` is `key`, not `some`
-                if '[' in k:
-                    new_parts = []
-                    for part in key_parts:
-                        if '[' in part:
-                            # Split by, then add back the bracket
-                            s = part.split('[')
-                            s[-1] = f'[{s[-1]}'
-                            new_parts += s
-                        else:
-                            new_parts.append(part)
-                    key_parts = new_parts
-                # rol.value should be negative
-                assert rol.value < 0
-                new_key = '.'.join(key_parts[:rol.value])
-                if new_key != '':
-                    res = nested_delete(res, new_key)
-            # Case: Specified in the Conditional update dict
-            else:
-                res = nested_delete(res, k)
+            res = nested_delete(res, k)
 
         # Remove empty values
         if self.remove_empty:

@@ -73,17 +73,34 @@ def nested_get(msg: dict, key: str, default: Any = None) -> Any:
     res = _handle_ending_star_unwrap(res, key)
     return res if res != None else default
 
+# TODO: Add test for this
 def nested_delete(msg: dict, key: str) -> dict:
     """
     Has same syntax as nested_get, except returns the original msg
     with the requested key deleted
     """
     res = deepcopy(msg)
-    curr = res
-    nesting = key.split('.')
+    # Case: value has an ROL object
+    v = get(res, key)
+    nidx = -1
+    if type(v) == ROL:
+        assert v.value < 0
+        nidx += v.value
+    # For nesting, an array index counts as a level
+    #  e.g. 'a.b[0].c' -> ['a', 'b', 0, 'c']
+    # TODO: see if can leverage benedict library (update DictWrapper)
+    nesting = []
+    for item in key.split('.'):
+        if '[' in item:
+            parts = item.split('[')
+            parts[1] = f'[{parts[1]}'
+            nesting += parts
+        else:
+            nesting.append(item)
     nesting = list(map(_clean_idx, nesting))
     # Get up to the last key in nesting, then try to pop that key
-    for i in nesting[:-1]:
+    curr = res
+    for i in nesting[:nidx]:
         # TODO: Handle [*] case
         try:
             curr = curr[i]
@@ -91,7 +108,7 @@ def nested_delete(msg: dict, key: str) -> dict:
             raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     try:
         # TODO: Handle [*] case
-        del curr[nesting[-1]]
+        del curr[nesting[nidx]]
     except Exception as e:
         raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     return res
