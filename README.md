@@ -1,6 +1,6 @@
-# Pydian - A data mapping framework
+# Pydian - pythonic data mapping
 
-Pydian is a pure Python library for repeatable and sharable data mapping. It specifies data transforms from one dictionary into another using higher-order functions grouped together in a mapping object (also just a dictionary).
+Pydian is a pure Python library for repeatable and sharable data mapping. Pydian reduces boilerplate and provides a framework for expressively mapping data through Python `dict` objects. 
 
 ## Running Tests
 At the top level dir: `PYTHONPATH=. pytest`
@@ -29,13 +29,14 @@ def example_mapping(m: DictWrapper):
             m.get('sourceId'),
             m.get('sourceName')
         ],
-        'targetNested': m.getn('sourceNested.some.nested.value'),
+        'targetNested': m.get('sourceNested.some.nested.value'),
         'staticData': 'Any JSON primitive',
+        'targetMaybe': m.get('sourceMaybe.nope.its.None')
     }
 
-mapper = Mapper(example_mapping, remove_empty=False)
+mapper = Mapper(example_mapping, remove_empty=True)
 
-assert mapper.run(example_source_data) == {
+assert mapper(example_source_data) == {
     'targetId': 'Abc123',
     'targetArray': [
         'Abc123',
@@ -48,9 +49,9 @@ assert mapper.run(example_source_data) == {
 
 See the [mapping test examples](./tests/test_mapping.py) for a more involved look at some of the features + intended use-cases.
 
-The `DictWrapper` class is there for convenience -- this is equivalent:
+The general `get` method is available as well -- e.g. this is equivalent to the example above:
 ```python
-from pydian import get
+from pydian import Mapper, get
 
 # Same example as above
 example_source_data = {
@@ -74,9 +75,12 @@ def example_mapping(m: dict):
         ],
         'targetNested': get(m, 'sourceNested.some.nested.value'),
         'staticData': 'Any JSON primitive',
+        'targetMaybe': get(m, 'sourceMaybe.nope.its.None')
     }
 
-assert example_mapping(example_source_data) ==  {
+mapper = Mapper(example_mapping, remove_empty=True)
+
+assert mapper(example_source_data) ==  {
     'targetId': 'Abc123',
     'targetArray': [
         'Abc123',
@@ -87,4 +91,4 @@ assert example_mapping(example_source_data) ==  {
 }
 ```
 
-This removes the need for the `Mapper` class, however you lose whatever features come with it (e.g. empty value handling, conditional deleting, etc.). Using the `Mapper` class is preferred for consistency and code sharing, however this option is provided so the function can be used independently as necessary!
+Using the `Mapper` class is still preferred for consistency and mapping-related features, however this option is provided so the function can be used independently in other contexts as well!
