@@ -6,7 +6,7 @@ def remove_empty_values(input: Union[list, dict]):
     """
     if type(input) == list:
         return [remove_empty_values(v) for v in input if has_content(v)]
-    elif type(input) == dict:
+    elif issubclass(type(input), dict):
         return {k:remove_empty_values(v) for k, v in input.items() if has_content(v)}
     return input
 

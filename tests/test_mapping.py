@@ -1,6 +1,5 @@
 import pytest
-from pydian import Mapper, DictWrapper, ROL
-from pydian import get
+from pydian import Mapper, ROL, get
 
 @pytest.fixture
 def simple_data() -> dict:

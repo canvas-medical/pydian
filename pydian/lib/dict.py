@@ -77,7 +77,7 @@ def nested_get(msg: dict, key: str, default: Any = None) -> Any:
 def nested_delete(msg: dict, key: str) -> dict:
     """
     Has same syntax as nested_get, except returns the original msg
-    with the requested key deleted
+    with the requested key set to `None`
     """
     res = deepcopy(msg)
     # Case: value has an ROL object
@@ -86,19 +86,9 @@ def nested_delete(msg: dict, key: str) -> dict:
     if type(v) == ROL:
         assert v.value < 0
         nidx += v.value
-    # For nesting, an array index counts as a level
-    #  e.g. 'a.b[0].c' -> ['a', 'b', 0, 'c']
-    # TODO: see if can leverage benedict library (update DictWrapper)
-    nesting = []
-    for item in key.split('.'):
-        if '[' in item:
-            parts = item.split('[')
-            parts[1] = f'[{parts[1]}'
-            nesting += parts
-        else:
-            nesting.append(item)
-    nesting = list(map(_clean_idx, nesting))
-    # Get up to the last key in nesting, then try to pop that key
+    nesting = _get_nesting_list(key)
+    # Get up to the last key in nesting, then set that key to None
+    #  We set to None instead of popping to preserve indices
     curr = res
     for i in nesting[:nidx]:
         # TODO: Handle [*] case
@@ -108,7 +98,7 @@ def nested_delete(msg: dict, key: str) -> dict:
             raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     try:
         # TODO: Handle [*] case
-        del curr[nesting[nidx]]
+        curr[nesting[nidx]] = None
     except Exception as e:
         raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     return res
@@ -120,6 +110,20 @@ def _handle_ending_star_unwrap(res: dict, key: str) -> dict:
         res = [l for l in res if l != None]
         res = list(chain(*res))
     return res
+
+def _get_nesting_list(k: str) -> list:
+    # For nesting, an array index counts as a level
+    #  e.g. 'a.b[0].c' -> ['a', 'b', 0, 'c']
+    # TODO: see if can leverage benedict library (update DictWrapper)
+    nesting = []
+    for item in k.split('.'):
+        if '[' in item:
+            parts = item.split('[')
+            parts[1] = f'[{parts[1]}'
+            nesting += parts
+        else:
+            nesting.append(item)
+    return list(map(_clean_idx, nesting))
 
 def _clean_idx(s: str) -> int | str:
     """

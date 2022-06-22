@@ -32,4 +32,3 @@ class RelativeObjectLevel(Enum):
     PARENT = -2
     GRANDPARENT = -3
     GREATGRANDPARENT = -4
-    
