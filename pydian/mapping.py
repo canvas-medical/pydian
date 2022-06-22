@@ -4,7 +4,7 @@ from pydian.lib.util import remove_empty_values
 from pydian.lib.dict import get, nested_delete
 from pydian.lib.enums import RelativeObjectLevel as ROL
 
-# TODO: Remove this? Not sure what value this could add (yet)
+
 class DictWrapper(dict):
     def get(self, key: str, default: Any = None, then: Callable | None = None, drop_rol: ROL | None = None) -> Any:
         if '.' in key or '[' in key:
@@ -15,7 +15,7 @@ class DictWrapper(dict):
         if res is None and drop_rol:
             res = drop_rol
         return res
-    
+
     def __getitem__(self, key: str) -> Any:
         res = self.get(key)
         if res is None:
@@ -56,10 +56,10 @@ class Mapper:
     def __call__(self, source: dict) -> dict:
         try:
             res = self.map_fn(DictWrapper(source))
-            assert type(res) == dict
+            assert issubclass(type(res), dict)
         except Exception as e:
             raise RuntimeError(f'Failed to call {self.map_fn} on source data. Error: {e}')
-        
+
         # Handle conditional drop dict logic
         keys_to_drop = set()
         for k, v in self.conditionally_drop.items():
