@@ -79,19 +79,19 @@ def nested_data() -> dict:
 def test_get(simple_data):
     source = simple_data
     mod_fn = lambda msg: msg['data']['patient']['id'] + '_modified'
-    def mapping(m: DictWrapper) -> dict:
+    def mapping(m: dict) -> dict:
         return {
             'CASE_constant': 123,
-            'CASE_single': m.get('data'),
-            'CASE_nested': m.get('data.patient.id'),
+            'CASE_single': get(m, 'data'),
+            'CASE_nested': get(m, 'data.patient.id'),
             'CASE_nested_as_list': [
                 m['data.patient.active']
             ],
             'CASE_modded': mod_fn(m),
             'CASE_index_list': {
-                'first': m.get('list_data[0].patient'),
+                'first': get(m, 'list_data[0].patient'),
                 'second': m['list_data[1].patient'],
-                'out_of_bounds': m.get('list_data[2].patient')
+                'out_of_bounds': get(m, 'list_data[2].patient')
             }
         }
     mapper = Mapper(mapping, remove_empty=True)
@@ -110,53 +110,17 @@ def test_get(simple_data):
         }
     }
 
-def test_get_fn(simple_data):
-    source = simple_data
-    mod_fn = lambda msg: msg['data']['patient']['id'] + '_modified'
-    def mapping(m: dict) -> dict:
-        return {
-            'CASE_constant': 123,
-            'CASE_single': get(m, 'data'),
-            'CASE_nested': get(m, 'data.patient.id'),
-            'CASE_nested_as_list': [
-                get(m, 'data.patient.active')
-            ],
-            'CASE_modded': mod_fn(m),
-            'CASE_index_list': {
-                'first': get(m, 'list_data[0].patient'),
-                'second': get(m, 'list_data[1].patient'),
-                'out_of_bounds': get(m, 'list_data[2].patient')
-            }
-        }
-    # Note syntax difference
-    res = mapping(source)
-    assert res == {
-        'CASE_constant': 123,
-        'CASE_single': source.get('data'),
-        'CASE_nested': source['data']['patient']['id'],
-        'CASE_nested_as_list': [
-            source['data']['patient']['active']
-        ],
-        'CASE_modded': mod_fn(source),
-        'CASE_index_list': {
-            'first': source['list_data'][0]['patient'],
-            'second': source['list_data'][1]['patient'],
-            'out_of_bounds': None # This _doesn't_ get deleted 
-        }
-    }
-
-
 def test_nested_get(nested_data):
     source = nested_data
-    def mapping(m: DictWrapper):
+    def mapping(m: dict):
         return {
             'CASE_constant': 123,
-            'CASE_unwrap_active': m.get('data[*].patient.active'),
-            'CASE_unwrap_id': m.get('data[*].patient.id'),
-            'CASE_unwrap_list': m.get('data[*].patient.ints'),
-            'CASE_unwrap_list_twice': m.get('data[*].patient.ints[*]'),
-            'CASE_unwrap_list_dict': m.get('data[*].patient.dicts[*].num'),
-            'CASE_unwrap_list_dict_twice': m.get('data[*].patient.dicts[*].num[*]')
+            'CASE_unwrap_active': get(m, 'data[*].patient.active'),
+            'CASE_unwrap_id': get(m, 'data[*].patient.id'),
+            'CASE_unwrap_list': get(m, 'data[*].patient.ints'),
+            'CASE_unwrap_list_twice': get(m, 'data[*].patient.ints[*]'),
+            'CASE_unwrap_list_dict': get(m, 'data[*].patient.dicts[*].num'),
+            'CASE_unwrap_list_dict_twice': get(m, 'data[*].patient.dicts[*].num[*]')
         }
     mapper = Mapper(mapping, remove_empty=True)
     res = mapper(source)
@@ -172,16 +136,16 @@ def test_nested_get(nested_data):
 
 def test_conditional_drop(simple_data):
     source = simple_data
-    def mapping(m: DictWrapper):
+    def mapping(m: dict):
         return {
-            'CASE_not_found': m.get('INVALID_KEY'),
+            'CASE_not_found': get(m, 'INVALID_KEY'),
             'CASE_constant': 123,
-            'CASE_single': m.get('data'),
+            'CASE_single': get(m, 'data'),
             'CASE_nested': {
-                'id': m.get('data.INVALID_KEY')
+                'id': get(m, 'data.INVALID_KEY')
             },
             'CASE_list': [
-                m.get('data.patient.active')
+                get(m, 'data.patient.active')
             ],
             'CASE_deeply': {
                 'nested': {
