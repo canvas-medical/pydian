@@ -6,8 +6,22 @@ from pydian.lib.enums import RelativeObjectLevel as ROL
 
 # TODO: Remove this? Not sure what value this could add (yet)
 class DictWrapper(dict):
-    def getn(self, key: str, default: Any = None, then: Callable | None = None, drop_rol: ROL | None = None) -> Any:
-        return get(self, key, default, then, drop_rol)
+    def get(self, key: str, default: Any = None, then: Callable | None = None, drop_rol: ROL | None = None) -> Any:
+        if '.' in key or '[' in key:
+            return get(self, key, default, then, drop_rol)
+        res = super().get(key, default)
+        if then:
+            res = then(res)
+        if res is None and drop_rol:
+            res = drop_rol
+        return res
+    
+    def __getitem__(self, key: str) -> Any:
+        res = self.get(key)
+        if res is None:
+            raise KeyError(f'{key}')
+        return res
+    
 
 class Mapper:
     def __init__(self, map_fn: Callable[['DictWrapper'], dict], remove_empty: bool = False, conditionally_drop: dict = {}) -> None:
