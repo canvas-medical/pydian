@@ -85,12 +85,15 @@ def nested_delete(msg: dict, key: str) -> dict:
     # Get up to the last key in nesting, then try to pop that key
     for i in nesting[:-1]:
         # TODO: Handle [*] case
-        curr = curr[i]
+        try:
+            curr = curr[i]
+        except Exception as e:
+            raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     try:
         # TODO: Handle [*] case
         del curr[nesting[-1]]
     except Exception as e:
-        raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}')
+        raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     return res
 
 def _handle_ending_star_unwrap(res: dict, key: str) -> dict:
