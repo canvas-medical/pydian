@@ -1,4 +1,5 @@
 from benedict import benedict
+from copy import deepcopy
 from typing import Any, Callable
 from pydian.lib.util import remove_empty_values
 from pydian.lib.dict import get, nested_delete
@@ -65,6 +66,11 @@ class Mapper:
         if type(res) == dict:
             res = DictWrapper(res)
 
+        # Unpack Tuple-based keys
+        # NOTE: `benedict` assumes tuple keys are intended as a keypath, 
+        #       so to get around this we manipulate the underlying dict
+        self._unpack_tuple_keys_inplace(res.dict())
+
         # Handle conditional drop dict logic
         keys_to_drop = set()
         for k, v in self.conditionally_drop.items():
@@ -75,7 +81,7 @@ class Mapper:
                     keys_to_drop |= v
 
         # Handle any ROL-flagged values
-        self._add_rol_keys_to_drop(keys_to_drop, res)
+        self._add_rol_keys_to_drop_inplace(keys_to_drop, res)
 
         # Remove the keys to drop
         for k in keys_to_drop:
@@ -87,7 +93,29 @@ class Mapper:
 
         return res
     
-    def _add_rol_keys_to_drop(self, k_set: set, msg: dict, key_prefix: str = '') -> None:
+    def _unpack_tuple_keys_inplace(self, res: dict) -> None:
+        for k, v in deepcopy(res).items():
+            # NOTE: we iterate over a deepcopy since 
+            #       we modify the original dict while looping.
+            #       So for the recursive subcall, we want the
+            #       original object pointer `res[k]` as opposed to `v`
+            if issubclass(type(v), dict):
+                self._unpack_tuple_keys_inplace(res[k])
+            elif type(v) == list:
+                [self._unpack_tuple_keys_inplace(d) for d in res[k] if issubclass(type(d), dict)] 
+            elif type(k) == tuple:
+                # Update the original dict
+                vals = res.pop(k)
+                try:
+                    assert type(vals) == tuple
+                    assert len(k) == len(vals)
+                except Exception as e:
+                    raise RuntimeError(f'For tuple-based keys, expecting tuple of same length as {k}, got: {vals}')
+                for i, new_key in enumerate(k):
+                    # Insert back at the same level
+                    res[new_key] = vals[i]
+
+    def _add_rol_keys_to_drop_inplace(self, k_set: set, msg: dict, key_prefix: str = '') -> None:
         """
         Searches `msg`, then takes each ROL object found and adds the 
           nested key where the ROL was found.
@@ -97,12 +125,12 @@ class Mapper:
         for k, v in msg.items():
             curr_nesting = f'{key_prefix}.{k}' if key_prefix != '' else k
             if issubclass(type(v), dict):
-                self._add_rol_keys_to_drop(k_set, v, curr_nesting)
+                self._add_rol_keys_to_drop_inplace(k_set, v, curr_nesting)
             elif type(v) == list:
                 for i, item in enumerate(v):
                     indexed_nesting = f'{curr_nesting}[{i}]'
                     if issubclass(type(item), dict):
-                        self._add_rol_keys_to_drop(k_set, item, indexed_nesting)
+                        self._add_rol_keys_to_drop_inplace(k_set, item, indexed_nesting)
                     elif type(v) == ROL:
                         k_set.add(indexed_nesting)
             elif type(v) == ROL:

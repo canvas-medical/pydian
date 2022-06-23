@@ -206,3 +206,27 @@ def test_rol_drop(simple_data):
             }
         }
     }
+
+def test_tuple_unwrapping(simple_data):
+    source = simple_data
+    generate_n_tuple = lambda n: tuple(range(n))
+    def mapping(m: dict) -> dict:
+        return {
+            ('a', 'b', 'c', 'd'): generate_n_tuple(4),
+            'nested': {
+                ('e', 'f', 'g'): generate_n_tuple(3)
+            }
+        }
+    mapper = Mapper(mapping, remove_empty=True)
+    res = mapper(source)
+    assert res == {
+        'a': 0,
+        'b': 1,
+        'c': 2,
+        'd': 3,
+        'nested': {
+            'e': 0,
+            'f': 1,
+            'g': 2
+        }
+    }
