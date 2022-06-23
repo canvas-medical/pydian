@@ -3,6 +3,8 @@ import re
 from copy import deepcopy
 from itertools import chain
 from .enums import RelativeObjectLevel as ROL
+from benedict import benedict
+from benedict.dicts.keypath import keypath_util
 
 def get(msg: dict, key: str, default: Any = None, then: Callable | None = None, drop_rol: ROL | None = None):
     res = nested_get(msg, key, default) \
@@ -73,32 +75,25 @@ def nested_get(msg: dict, key: str, default: Any = None) -> Any:
     res = _handle_ending_star_unwrap(res, key)
     return res if res != None else default
 
-# TODO: Add test for this
-def nested_delete(msg: dict, key: str) -> dict:
+def nested_delete(msg: benedict, key: str) -> dict:
     """
     Has same syntax as nested_get, except returns the original msg
     with the requested key set to `None`
     """
     res = deepcopy(msg)
+    if type(res) == dict:
+        res = benedict(res)
+    nesting = keypath_util.parse_keys(key, '.')
     # Case: value has an ROL object
     v = get(res, key)
-    nidx = -1
     if type(v) == ROL:
         assert v.value < 0
-        nidx += v.value
-    nesting = _get_nesting_list(key)
+        nesting = nesting[:v.value]
     # Get up to the last key in nesting, then set that key to None
     #  We set to None instead of popping to preserve indices
-    curr = res
-    for i in nesting[:nidx]:
-        # TODO: Handle [*] case
-        try:
-            curr = curr[i]
-        except Exception as e:
-            raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     try:
         # TODO: Handle [*] case
-        curr[nesting[nidx]] = None
+        res[nesting] = None
     except Exception as e:
         raise IndexError(f'Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}')
     return res
@@ -110,29 +105,3 @@ def _handle_ending_star_unwrap(res: dict, key: str) -> dict:
         res = [l for l in res if l != None]
         res = list(chain(*res))
     return res
-
-def _get_nesting_list(k: str) -> list:
-    # For nesting, an array index counts as a level
-    #  e.g. 'a.b[0].c' -> ['a', 'b', 0, 'c']
-    # TODO: see if can leverage benedict library (update DictWrapper)
-    nesting = []
-    for item in k.split('.'):
-        if '[' in item:
-            parts = item.split('[')
-            parts[1] = f'[{parts[1]}'
-            nesting += parts
-        else:
-            nesting.append(item)
-    return list(map(_clean_idx, nesting))
-
-def _clean_idx(s: str) -> int | str:
-    """
-    Cleans "[0]" -> 0, otherwise returns original str
-    """
-    KEY_INDEX_RE = r"(?:\[[\'\"]*(\-?[\d]+)[\'\"]*\]){1}$"
-    matches = re.findall(KEY_INDEX_RE, s)
-    if matches:
-        s = re.sub(KEY_INDEX_RE, "", s)
-        index = int(matches[0])
-        return index
-    return s

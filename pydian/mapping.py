@@ -1,13 +1,13 @@
-
+from benedict import benedict
 from typing import Any, Callable
 from pydian.lib.util import remove_empty_values
 from pydian.lib.dict import get, nested_delete
 from pydian.lib.enums import RelativeObjectLevel as ROL
 
-
-class DictWrapper(dict):
+# TODO: Make this a wrapper around benedict
+class DictWrapper(benedict):
     def get(self, key: str, default: Any = None, then: Callable | None = None, drop_rol: ROL | None = None) -> Any:
-        if '.' in key or '[' in key:
+        if '*' in key:
             return get(self, key, default, then, drop_rol)
         res = super().get(key, default)
         if then:
@@ -61,6 +61,9 @@ class Mapper:
             assert issubclass(type(res), dict)
         except Exception as e:
             raise RuntimeError(f'Failed to call {self.map_fn} on source data. Error: {e}')
+
+        if type(res) == dict:
+            res = DictWrapper(res)
 
         # Handle conditional drop dict logic
         keys_to_drop = set()
