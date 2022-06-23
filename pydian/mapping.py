@@ -96,12 +96,12 @@ class Mapper:
         """
         for k, v in msg.items():
             curr_nesting = f'{key_prefix}.{k}' if key_prefix != '' else k
-            if type(v) == dict:
+            if issubclass(type(v), dict):
                 self._add_rol_keys_to_drop(k_set, v, curr_nesting)
             elif type(v) == list:
                 for i, item in enumerate(v):
                     indexed_nesting = f'{curr_nesting}[{i}]'
-                    if type(item) == dict:
+                    if issubclass(type(item), dict):
                         self._add_rol_keys_to_drop(k_set, item, indexed_nesting)
                     elif type(v) == ROL:
                         k_set.add(indexed_nesting)

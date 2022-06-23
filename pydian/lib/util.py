@@ -24,7 +24,7 @@ def has_content(obj: Any) -> bool:
             for item in obj:
                 inner_res = inner_res or has_content(item)
             res = res and inner_res
-        elif type(obj) == dict:
+        elif issubclass(type(obj), dict):
             inner_res = False
             for _, v in obj.items():
                 inner_res = inner_res or has_content(v)
