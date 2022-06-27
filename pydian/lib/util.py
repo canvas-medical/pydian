@@ -1,5 +1,6 @@
 from typing import Any, Union
 
+
 def remove_empty_values(input: Union[list, dict]):
     """
     Removes empty inner lists/dicts.
@@ -7,15 +8,16 @@ def remove_empty_values(input: Union[list, dict]):
     if type(input) == list:
         return [remove_empty_values(v) for v in input if has_content(v)]
     elif issubclass(type(input), dict):
-        return {k:remove_empty_values(v) for k, v in input.items() if has_content(v)}
+        return {k: remove_empty_values(v) for k, v in input.items() if has_content(v)}
     return input
+
 
 def has_content(obj: Any) -> bool:
     """
     False if object is empty, and/or contains only empty items, otherwise True
     """
     res = obj != None
-    if hasattr(obj, '__len__'):
+    if hasattr(obj, "__len__"):
         res = len(obj) > 0
         # If has items, recursively check if those items have content.
         # A case has content if at least one inner item has content.

@@ -1,8 +1,9 @@
 from enum import Enum
 
+
 class RelativeObjectLevel(Enum):
     """
-    A RelativeObjectLevel (abbrv. ROL) is the object relative to 
+    A RelativeObjectLevel (abbrv. ROL) is the object relative to
     the current value. An "object" in this context is a dict or a list.
     Thus, CURRENT is the object containing the value, PARENT is the
     parent object containing the current object (if it exists), etc.
@@ -13,7 +14,7 @@ class RelativeObjectLevel(Enum):
         'A': {   <-- Parent
             'B': {      <-- Current (rel to _value)
                 'C': _value
-            } 
+            }
         }
     }
 
@@ -28,6 +29,7 @@ class RelativeObjectLevel(Enum):
         ]
     }
     """
+
     CURRENT = -1
     PARENT = -2
     GRANDPARENT = -3

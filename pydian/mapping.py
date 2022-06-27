@@ -7,8 +7,14 @@ from pydian.lib.enums import RelativeObjectLevel as ROL
 
 # TODO: Make this a wrapper around benedict
 class DictWrapper(benedict):
-    def get(self, key: str, default: Any = None, then: Callable | None = None, drop_rol: ROL | None = None) -> Any:
-        if '*' in key:
+    def get(
+        self,
+        key: str,
+        default: Any = None,
+        then: Callable | None = None,
+        drop_rol: ROL | None = None,
+    ) -> Any:
+        if "*" in key:
             return get(self, key, default, then, drop_rol)
         res = super().get(key, default)
         if then:
@@ -20,12 +26,17 @@ class DictWrapper(benedict):
     def __getitem__(self, key: str) -> Any:
         res = self.get(key)
         if res is None:
-            raise KeyError(f'{key}')
+            raise KeyError(f"{key}")
         return res
-    
+
 
 class Mapper:
-    def __init__(self, map_fn: Callable[['DictWrapper'], dict], remove_empty: bool = False, conditionally_drop: dict = {}) -> None:
+    def __init__(
+        self,
+        map_fn: Callable[["DictWrapper"], dict],
+        remove_empty: bool = False,
+        conditionally_drop: dict = {},
+    ) -> None:
         """
         The conditional drop dictionary will drop `value` if `key` evaluates to None, e.g.
         {
@@ -44,14 +55,16 @@ class Mapper:
         """
         self.map_fn = map_fn
         self.remove_empty = remove_empty
-        
+
         #  Validate the conditionally_drop dict
         for k, v in conditionally_drop.items():
             try:
                 assert type(k) == str
                 assert type(v) in {str, set}
             except Exception as e:
-                raise TypeError(f'The conditionally_drop dict can only map `str->(str | set)`, got: {(k, v)}')
+                raise TypeError(
+                    f"The conditionally_drop dict can only map `str->(str | set)`, got: {(k, v)}"
+                )
         self.conditionally_drop = conditionally_drop
 
     def __call__(self, source: dict, **kwargs: Any) -> dict:
@@ -61,13 +74,15 @@ class Mapper:
             res = self.map_fn(source, **kwargs)
             assert issubclass(type(res), dict)
         except Exception as e:
-            raise RuntimeError(f'Failed to call {self.map_fn} on source data. Error: {e}')
+            raise RuntimeError(
+                f"Failed to call {self.map_fn} on source data. Error: {e}"
+            )
 
         if type(res) == dict:
             res = DictWrapper(res)
 
         # Unpack Tuple-based keys
-        # NOTE: `benedict` assumes tuple keys are intended as a keypath, 
+        # NOTE: `benedict` assumes tuple keys are intended as a keypath,
         #       so to get around this we manipulate the underlying dict
         self._unpack_tuple_keys_inplace(res.dict())
 
@@ -76,7 +91,7 @@ class Mapper:
         for k, v in self.conditionally_drop.items():
             if get(res, k) is None:
                 if type(v) == str:
-                    keys_to_drop.add(v) 
+                    keys_to_drop.add(v)
                 else:
                     keys_to_drop |= v
 
@@ -92,17 +107,21 @@ class Mapper:
             res = remove_empty_values(res)
 
         return res
-    
+
     def _unpack_tuple_keys_inplace(self, res: dict) -> None:
         for k, v in deepcopy(res).items():
-            # NOTE: we iterate over a deepcopy since 
+            # NOTE: we iterate over a deepcopy since
             #       we modify the original dict while looping.
             #       So for the recursive subcall, we want the
             #       original object pointer `res[k]` as opposed to `v`
             if issubclass(type(v), dict):
                 self._unpack_tuple_keys_inplace(res[k])
             elif type(v) == list:
-                [self._unpack_tuple_keys_inplace(d) for d in res[k] if issubclass(type(d), dict)] 
+                [
+                    self._unpack_tuple_keys_inplace(d)
+                    for d in res[k]
+                    if issubclass(type(d), dict)
+                ]
             elif type(k) == tuple:
                 # Update the original dict
                 vals = res.pop(k)
@@ -110,25 +129,29 @@ class Mapper:
                     assert type(vals) == tuple
                     assert len(k) == len(vals)
                 except Exception as e:
-                    raise RuntimeError(f'For tuple-based keys, expecting tuple of same length as {k}, got: {vals}')
+                    raise RuntimeError(
+                        f"For tuple-based keys, expecting tuple of same length as {k}, got: {vals}"
+                    )
                 for i, new_key in enumerate(k):
                     # Insert back at the same level
                     res[new_key] = vals[i]
 
-    def _add_rol_keys_to_drop_inplace(self, k_set: set, msg: dict, key_prefix: str = '') -> None:
+    def _add_rol_keys_to_drop_inplace(
+        self, k_set: set, msg: dict, key_prefix: str = ""
+    ) -> None:
         """
-        Searches `msg`, then takes each ROL object found and adds the 
+        Searches `msg`, then takes each ROL object found and adds the
           nested key where the ROL was found.
 
         The logic of which relative key to delete is handled elsewhere!
         """
         for k, v in msg.items():
-            curr_nesting = f'{key_prefix}.{k}' if key_prefix != '' else k
+            curr_nesting = f"{key_prefix}.{k}" if key_prefix != "" else k
             if issubclass(type(v), dict):
                 self._add_rol_keys_to_drop_inplace(k_set, v, curr_nesting)
             elif type(v) == list:
                 for i, item in enumerate(v):
-                    indexed_nesting = f'{curr_nesting}[{i}]'
+                    indexed_nesting = f"{curr_nesting}[{i}]"
                     if issubclass(type(item), dict):
                         self._add_rol_keys_to_drop_inplace(k_set, item, indexed_nesting)
                     elif type(v) == ROL:
