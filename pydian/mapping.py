@@ -5,7 +5,7 @@ from pydian.lib.util import remove_empty_values
 from pydian.lib.dict import get, nested_delete
 from pydian.lib.enums import RelativeObjectLevel as ROL
 
-# TODO: Make this a wrapper around benedict
+
 class DictWrapper(benedict):
     def get(
         self,
@@ -33,25 +33,23 @@ class DictWrapper(benedict):
 class Mapper:
     def __init__(
         self,
-        map_fn: Callable[["DictWrapper"], dict],
+        map_fn: Callable[[dict], dict],
         remove_empty: bool = False,
         conditionally_drop: dict = {},
     ) -> None:
         """
-        The conditional drop dictionary will drop `value` if `key` evaluates to None, e.g.
-        {
-            'name.val': 'name'
-        }
-        Means if .get('name.val') == None, then the object at 'name' will be removed from the result
+        Calls `map_fn` and then performs postprocessing into the final dict (JSON-like)
 
-        This supports multiple keys, e.g.:
+        The `conditionally_drop` dictionary will drop `value` if `key` evaluates to None, e.g.
         {
-            'name.val': {
-                'name',
+            'name.val': 'name',
+            'name.otherVal': {
+                'otherName',
                 'otherThing'
             }
         }
-        Means if .get('name.val') == None, then both objects at 'name' and 'otherThing' will be removed
+        Means if get(msg, 'name.val') is None, then the object at 'name' will be removed from the result,
+          and if get(msg, 'name.otherVal') is None, then both objects at 'otherName' and 'otherThing' will be removed
         """
         self.map_fn = map_fn
         self.remove_empty = remove_empty

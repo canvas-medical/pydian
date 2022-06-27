@@ -162,16 +162,15 @@ def test_rol_drop(simple_data):
     }
 
 
-def test_tuple_unwrapping(simple_data):
-    source = simple_data
-    generate_n_tuple = lambda n: tuple(range(n))
+def test_tuple_unwrapping(nested_data):
+    source = nested_data
 
     def mapping(m: dict) -> dict:
         return {
-            ("a", "b", "c", "d"): generate_n_tuple(4),
-            "nested": {("e", "f", "g"): generate_n_tuple(3)},
+            ("a", "b", "c"): get(m, 'data[0].patient.ints', then=tuple),
+            "nested": {("d", "e", "f"): get(m, 'data[1].patient.ints', then=tuple)},
         }
 
     mapper = Mapper(mapping, remove_empty=True)
     res = mapper(source)
-    assert res == {"a": 0, "b": 1, "c": 2, "d": 3, "nested": {"e": 0, "f": 1, "g": 2}}
+    assert res == {"a": 1, "b": 2, "c": 3, "nested": {"d": 4, "e": 5, "f": 6}}
