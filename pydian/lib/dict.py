@@ -8,30 +8,34 @@ from benedict.dicts.keypath import keypath_util
 
 
 def get(
-    msg: dict,
+    source: dict,
     key: str,
     default: Any = None,
-    then: Callable | None = None,
-    drop_rol: ROL | None = None,
+    apply: Callable | None = None,
+    drop_level: ROL | None = None,
 ):
-    res = nested_get(msg, key, default) if "." in key else single_get(msg, key, default)
-    if res and callable(then):
+    res = (
+        _nested_get(source, key, default)
+        if "." in key
+        else _single_get(source, key, default)
+    )
+    if res and apply:
         try:
-            res = then(res)
+            res = apply(res)
         except Exception as e:
             raise RuntimeError(
-                f"`then` callable failed when getting key: {key}, error: {e}"
+                f"`apply` callable failed when getting key: {key}, error: {e}"
             )
-    if drop_rol and res is None:
-        res = drop_rol
+    if drop_level and res is None:
+        res = drop_level
     return res
 
 
-def single_get(msg: dict, key: str, default: Any = None) -> Any:
+def _single_get(source: dict, key: str, default: Any = None) -> Any:
     """
     Gets single item, supports int indexing, e.g. `someKey[0]`
     """
-    res = msg
+    res = source
     idx = re.search(r"\[\d+\]", key)
     if idx:
         # TODO: consolidate str logic into shared functions
@@ -41,15 +45,15 @@ def single_get(msg: dict, key: str, default: Any = None) -> Any:
         key = key.replace(idx_str, "")
         res = res.get(key, [])
         res = res[i] if i in range(len(res)) else None
-    elif key[-3:] == "[*]":
+    elif key.endswith("[*]"):
         res = res.get(key[:-3])
-        res = _handle_ending_star_unwrap(res, key)
+        res = __handle_ending_star_unwrap(res, key)
     else:
         res = res.get(key, default)
     return res
 
 
-def nested_get(msg: dict, key: str, default: Any = None) -> Any:
+def _nested_get(source: dict, key: str, default: Any = None) -> Any:
     """
     Expects `.`-delimited string and tries to get the item in the dict.
 
@@ -64,65 +68,63 @@ def nested_get(msg: dict, key: str, default: Any = None) -> Any:
     TODO: Add support for querying, maybe e.g. [?: thing.val==1]
     """
     if "." not in key:
-        return single_get(msg, key, default)
+        return _single_get(source, key, default)
     stack = key.split(".")
-    res = deepcopy(msg)
+    res = deepcopy(source)
     while len(stack) > 0:
         k = stack.pop(0)
         # If need to unwrap, then empty stack
-        if k[-3:] == "[*]":
+        if k.endswith("[*]"):
             k = k[:-3]
             remaining_key = ".".join(stack)
             stack = []  # wipe stack for current run
             res = res.get(k)
             if remaining_key != "":
-                res = [nested_get(v, remaining_key, None) for v in res]
+                res = [_nested_get(v, remaining_key, None) for v in res]
         else:
-            res = single_get(res, k)
+            res = _single_get(res, k)
         if res == None:
             break
-    res = _handle_ending_star_unwrap(res, key)
+    res = __handle_ending_star_unwrap(res, key)
     return res if res != None else default
 
 
-def nested_delete(msg: benedict, key: str) -> dict:
+def _nested_delete(source: dict, key: str) -> dict:
     """
-    Has same syntax as nested_get, except returns the original msg
+    Has same syntax as _nested_get, except returns the original source
     with the requested key set to `None`
     """
-    res = deepcopy(msg)
-    if type(res) == dict:
-        res = benedict(res)
-    nestings = [keypath_util.parse_keys(k, ".") for k in key.split("[*].")]
+    res = deepcopy(benedict(source))
+    keypaths = [keypath_util.parse_keys(k, ".") for k in key.split("[*].")]
     # Case: value has an ROL object
     v = get(res, key)
     if type(v) == ROL:
         assert v.value < 0
-        nestings[-1] = nestings[-1][: v.value]
-    # Get up to the last key in nesting, then set that key to None
+        keypaths[-1] = keypaths[-1][: v.value]
+    # Get up to the last key in keypath, then set that key to None
     #  We set to None instead of popping to preserve indices
     try:
-        curr_nesting = nestings[0]
-        if len(nestings) > 1:
+        curr_keypath = keypaths[0]
+        if len(keypaths) > 1:
             remaining_key = ".".join(key.split("[*].", 1)[1:])
-            assert issubclass(type(res[curr_nesting][0]), dict)
-            res[curr_nesting] = [
-                nested_delete(r, remaining_key) if issubclass(type(r), dict) else None
-                for r in res[curr_nesting]
+            assert issubclass(type(res[curr_keypath][0]), dict)
+            res[curr_keypath] = [
+                _nested_delete(r, remaining_key) if issubclass(type(r), dict) else None
+                for r in res[curr_keypath]
             ]
         else:
-            res[curr_nesting] = None
+            res[curr_keypath] = None
     except Exception as e:
         raise IndexError(
-            f"Failed to perform nested_delete on key: {key}, Error: {e}, Input: {msg}"
+            f"Failed to perform _nested_delete on key: {key}, Error: {e}, Input: {source}"
         )
     return res
 
 
-def _handle_ending_star_unwrap(res: dict, key: str) -> dict:
+def __handle_ending_star_unwrap(res: list, key: str) -> list:
     # HACK: Handle unwrapping if specified at the end
     # TODO: Find a nicer way to do this. Works for now...
-    if key[-3:] == "[*]" and type(res) == list and type(res[0]) == list:
+    if key.endswith("[*]") and isinstance(res, list) and isinstance(res[0], list):
         res = [l for l in res if l != None]
         res = list(chain(*res))
     return res

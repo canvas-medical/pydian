@@ -1,5 +1,5 @@
 import pytest
-from pydian.lib.dict import nested_delete
+from pydian.lib.dict import _nested_delete
 from pydian import get
 from copy import deepcopy
 
@@ -38,7 +38,7 @@ def nested_data() -> dict:
                 "patient": {
                     "id": "jkl101112",
                     "active": True,
-                    # 'ints' is deliberately missing
+                    # "ints" is deliberately missing
                     "dicts": [{"num": 7}],
                 }
             },
@@ -46,7 +46,7 @@ def nested_data() -> dict:
     }
 
 
-def test_nested_delete(nested_data: dict) -> dict:
+def test_nested_delete(nested_data: dict) -> None:
     orig = nested_data
     source = deepcopy(nested_data)
     keys = (
@@ -55,20 +55,20 @@ def test_nested_delete(nested_data: dict) -> dict:
         "list_data[3].patient.active",
     )
     for k in keys:
-        res = nested_delete(source, k)
-        assert get(res, k) == None
-        assert get(orig, k) != None
+        res = _nested_delete(source, k)
+        assert get(res, k) is None
+        assert get(orig, k) is not None
     # Test [*] format
     source = deepcopy(nested_data)
     single_star_keys = ("list_data[*].patient.dicts",)
     for k in single_star_keys:
-        res = nested_delete(source, k)
+        res = _nested_delete(source, k)
         assert len(get(res, k)) == len(get(orig, k))
         assert not any(get(res, k))
         assert any(get(orig, k))
     double_star_keys = ("list_data[*].patient.dicts[*].num",)
     for k in double_star_keys:
-        res = nested_delete(source, k)
+        res = _nested_delete(source, k)
         assert len(get(res, k)) == len(get(orig, k))
         assert not any([any(l) for l in get(res, k)])
         assert any([any(l) for l in get(orig, k)])

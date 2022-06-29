@@ -12,8 +12,8 @@ With Pydian, you can specify your transforms within a single dictionary as follo
 ```python
 from pydian import Mapper, get
 
-# Some arbitrary example data
-example_source_data = {
+# Some arbitrary source data
+source = {
     'sourceId': 'Abc123',
     'sourceName': 'Pydian Example',
     'sourceNested': {
@@ -31,7 +31,7 @@ example_source_data = {
 }
 
 # A centralized mapping function -- specify your logic as data!
-def example_mapping_fn(m: dict):
+def mapping_fn(m: dict) -> dict:
     return {
         'staticData': 'Any JSON primitive',
         'targetId': get(m, 'sourceId'),
@@ -39,16 +39,17 @@ def example_mapping_fn(m: dict):
             get(m, 'sourceId'),
             get(m, 'sourceName')
         ],
-        'targetNested': get(m, 'sourceNested.some.nested.value', then=str.upper), # Get deeply nested values
-        'targetMaybe': get(m, 'sourceMaybe.nope.its.None', then=str.upper), # Null-check handling is built-in!
+        'targetNested': get(m, 'sourceNested.some.nested.value', apply=str.upper), # Get deeply nested values
+        'targetMaybe': get(m, 'sourceMaybe.nope.its.None', apply=str.upper), # Null-check handling is built-in!
         'targetList': get(m, 'sourceList[*].val') # Unwrap list structures with [*]
     }
 
 # A `Mapper` class that runs the mapping function and provides some built-in post-processing logic
-mapper = Mapper(example_mapping_fn)
+mapper = Mapper(mapping_fn)
 
 # A result that syntactically matches the mapping!
-assert mapper(example_source_data) ==  {
+result = mapper(source)
+assert result ==  {
     'staticData': 'Any JSON primitive',
     'targetId': 'Abc123',
     'targetArray': [
@@ -67,9 +68,9 @@ See the [mapping test examples](./tests/test_mapping.py) for a more involved loo
 Pydian defines a special `get` function that provides a simple syntax for:
 - Getting nested items
     - Chain gets with `.`
-    - Index lists like lists
+    - Index into lists
     - Unwrap a list of dicts with `[*]`
-- Chaining successful operations with `then`
+- Chaining successful operations with `apply`
 - Specifying conditional dropping (see [below](./README.md#conditional-dropping))
 
 `None` handling is built-in which reduces boilerplate code!
@@ -94,11 +95,12 @@ source = {
     # `source_k` is missing!
 }
 
+# TODO: Fix this example
 def example_mapping_fn(m: dict) -> dict:
     return {
         'first_obj': {
-            # First method (preferred): in `get`
-            'res_k': get(m, 'source_k', drop_rol=ROL.CURRENT), # Sets the entire object to `None` if this is `None`
+            # Specify in `get`, or as an if comprehension
+            'res_k': get(m, 'source_k', drop_level=ROL.CURRENT), # Sets the entire object to `None` if this is `None`
             'other_k': 'Some value',
         },
         'second_obj': {
@@ -108,15 +110,9 @@ def example_mapping_fn(m: dict) -> dict:
                 None
             ]
         },
-        'const': 'Some constant'
     }
 
-# Second method: as postprocessing step
-cd_dict = {
-    'second_obj.list_k[-1]': 'const' # If the first is `None`, set the second to `None`
-}
-
-mapper = Mapper(example_mapping_fn, conditionally_drop=cd_dict)
+mapper = Mapper(example_mapping_fn)
 
 assert mapper(source) == {
     'first_obj': None,
@@ -127,7 +123,6 @@ assert mapper(source) == {
             None
         ]
     },
-    'const': None
 }
 ```
 
@@ -145,7 +140,7 @@ def example_mapping_fn(m: dict) -> dict:
         # A tuple-key and tuple-value will be unwrapped in-order
         ('first',
         'second',
-        'third'): get(m, 'source_list', then=tuple)
+        'third'): get(m, 'source_list', apply=tuple)
     }
 
 mapper = Mapper(example_mapping_fn)

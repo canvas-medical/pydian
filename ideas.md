@@ -49,7 +49,7 @@ Query idea:
 
 ## Try to incorporate funcy things (which are already built)
 
-E.g. `get_in` is the same idea as the `nested_get` functionality with probably more support, can hook into that
+E.g. `get_in` is the same idea as the `_nested_get` functionality with probably more support, can hook into that
 
 ## Try to incorporate benedict in `DictWrapper`
 

@@ -62,11 +62,11 @@ def test_get(simple_data):
             "CASE_constant": 123,
             "CASE_single": get(m, "data"),
             "CASE_nested": get(m, "data.patient.id"),
-            "CASE_nested_as_list": [m["data.patient.active"]],
+            "CASE_nested_as_list": [get(m, "data.patient.active")],
             "CASE_modded": mod_fn(m),
             "CASE_index_list": {
                 "first": get(m, "list_data[0].patient"),
-                "second": m["list_data[1].patient"],
+                "second": get(m, "list_data[1].patient"),
                 "out_of_bounds": get(m, "list_data[2].patient"),
             },
         }
@@ -113,28 +113,6 @@ def test_nested_get(nested_data):
     }
 
 
-def test_conditional_drop(simple_data):
-    source = simple_data
-
-    def mapping(m: dict):
-        return {
-            "CASE_not_found": get(m, "INVALID_KEY"),
-            "CASE_constant": 123,
-            "CASE_single": get(m, "data"),
-            "CASE_nested": {"id": get(m, "data.INVALID_KEY")},
-            "CASE_list": [get(m, "data.patient.active")],
-            "CASE_deeply": {"nested": {"thing": "here", "other_thing": "untouched"}},
-        }
-
-    cond_drop = {
-        "CASE_not_found": {"CASE_constant", "CASE_single", "CASE_deeply.nested.thing"},
-        "CASE_nested.id": {"CASE_list"},
-    }
-    mapper = Mapper(mapping, remove_empty=True, conditionally_drop=cond_drop)
-    res = mapper(source)
-    assert res == {"CASE_deeply": {"nested": {"other_thing": "untouched"}}}
-
-
 def test_rol_drop(simple_data):
     source = simple_data
 
@@ -142,15 +120,15 @@ def test_rol_drop(simple_data):
         return {
             "CASE_parent_keep": {
                 "CASE_curr_drop": {
-                    "a": get(m, "notFoundKey", drop_rol=ROL.CURRENT),
+                    "a": get(m, "notFoundKey", drop_level=ROL.CURRENT),
                     "b": "someValue",
                 },
                 "CASE_curr_keep": {
-                    "id": get(m, "data.patient.id", drop_rol=ROL.CURRENT)
+                    "id": get(m, "data.patient.id", drop_level=ROL.CURRENT)
                 },
             },
             "CASE_list": [
-                {"a": get(m, "notFoundKey", drop_rol=ROL.PARENT), "b": "someValue"},
+                {"a": get(m, "notFoundKey", drop_level=ROL.PARENT), "b": "someValue"},
                 {"a": "someValue", "b": "someValue"},
             ],
         }
@@ -167,8 +145,8 @@ def test_tuple_unwrapping(nested_data):
 
     def mapping(m: dict) -> dict:
         return {
-            ("a", "b", "c"): get(m, 'data[0].patient.ints', then=tuple),
-            "nested": {("d", "e", "f"): get(m, 'data[1].patient.ints', then=tuple)},
+            ("a", "b", "c"): get(m, "data[0].patient.ints", apply=tuple),
+            "nested": {("d", "e", "f"): get(m, "data[1].patient.ints", apply=tuple)},
         }
 
     mapper = Mapper(mapping, remove_empty=True)

@@ -2,7 +2,7 @@ from benedict import benedict
 from copy import deepcopy
 from typing import Any, Callable
 from pydian.lib.util import remove_empty_values
-from pydian.lib.dict import get, nested_delete
+from pydian.lib.dict import get, _nested_delete
 from pydian.lib.enums import RelativeObjectLevel as ROL
 
 
@@ -11,16 +11,16 @@ class DictWrapper(benedict):
         self,
         key: str,
         default: Any = None,
-        then: Callable | None = None,
-        drop_rol: ROL | None = None,
+        apply: Callable | None = None,
+        drop_level: ROL | None = None,
     ) -> Any:
         if "*" in key:
-            return get(self, key, default, then, drop_rol)
+            return get(self, key, default, apply, drop_level)
         res = super().get(key, default)
-        if then:
-            res = then(res)
-        if res is None and drop_rol:
-            res = drop_rol
+        if apply:
+            res = apply(res)
+        if res is None and drop_level:
+            res = drop_level
         return res
 
     def __getitem__(self, key: str) -> Any:
@@ -35,40 +35,15 @@ class Mapper:
         self,
         map_fn: Callable[[dict], dict],
         remove_empty: bool = False,
-        conditionally_drop: dict = {},
     ) -> None:
         """
-        Calls `map_fn` and then performs postprocessing into the final dict (JSON-like)
-
-        The `conditionally_drop` dictionary will drop `value` if `key` evaluates to None, e.g.
-        {
-            'name.val': 'name',
-            'name.otherVal': {
-                'otherName',
-                'otherThing'
-            }
-        }
-        Means if get(msg, 'name.val') is None, then the object at 'name' will be removed from the result,
-          and if get(msg, 'name.otherVal') is None, then both objects at 'otherName' and 'otherThing' will be removed
+        Calls `map_fn` and then performs postprocessing into the final dict
         """
         self.map_fn = map_fn
         self.remove_empty = remove_empty
 
-        #  Validate the conditionally_drop dict
-        for k, v in conditionally_drop.items():
-            try:
-                assert type(k) == str
-                assert type(v) in {str, set}
-            except Exception as e:
-                raise TypeError(
-                    f"The conditionally_drop dict can only map `str->(str | set)`, got: {(k, v)}"
-                )
-        self.conditionally_drop = conditionally_drop
-
     def __call__(self, source: dict, **kwargs: Any) -> dict:
         try:
-            if type(source) == dict:
-                source = DictWrapper(source)
             res = self.map_fn(source, **kwargs)
             assert issubclass(type(res), dict)
         except Exception as e:
@@ -76,29 +51,20 @@ class Mapper:
                 f"Failed to call {self.map_fn} on source data. Error: {e}"
             )
 
-        if type(res) == dict:
+        if isinstance(res, dict):
             res = DictWrapper(res)
 
         # Unpack Tuple-based keys
         # NOTE: `benedict` assumes tuple keys are intended as a keypath,
         #       so to get around this we manipulate the underlying dict
-        self._unpack_tuple_keys_inplace(res.dict())
-
-        # Handle conditional drop dict logic
-        keys_to_drop = set()
-        for k, v in self.conditionally_drop.items():
-            if get(res, k) is None:
-                if type(v) == str:
-                    keys_to_drop.add(v)
-                else:
-                    keys_to_drop |= v
+        res = self._unpack_tuple_keys(res.dict())
 
         # Handle any ROL-flagged values
-        self._add_rol_keys_to_drop_inplace(keys_to_drop, res)
+        keys_to_drop = self._get_keys_to_drop_set(res)
 
         # Remove the keys to drop
         for k in keys_to_drop:
-            res = nested_delete(res, k)
+            res = _nested_delete(res, k)
 
         # Remove empty values
         if self.remove_empty:
@@ -106,53 +72,53 @@ class Mapper:
 
         return res
 
-    def _unpack_tuple_keys_inplace(self, res: dict) -> None:
-        for k, v in deepcopy(res).items():
-            # NOTE: we iterate over a deepcopy since
-            #       we modify the original dict while looping.
-            #       So for the recursive subcall, we want the
-            #       original object pointer `res[k]` as opposed to `v`
+    def _unpack_tuple_keys(self, source: dict) -> dict:
+        """
+        Updates tuple key, tuple value pairs into individual key-value pairs
+        """
+        # NOTE: we iterate over a deepcopy since
+        #       we modify the original dict while looping.
+        #       So for the recursive subcall, we want the
+        #       original object pointer `res[k]` as opposed to `v`
+        res = deepcopy(source)
+        for k, v in source.items():
             if issubclass(type(v), dict):
-                self._unpack_tuple_keys_inplace(res[k])
-            elif type(v) == list:
-                [
-                    self._unpack_tuple_keys_inplace(d)
-                    for d in res[k]
-                    if issubclass(type(d), dict)
+                res[k] = self._unpack_tuple_keys(res[k])
+            elif isinstance(v, list):
+                res[k] = [
+                    self._unpack_tuple_keys(obj) if issubclass(type(obj), dict) else obj
+                    for obj in res[k]
                 ]
-            elif type(k) == tuple:
+            elif isinstance(k, tuple):
                 # Update the original dict
                 vals = res.pop(k)
                 try:
-                    assert type(vals) == tuple
-                    assert len(k) == len(vals)
-                except Exception as e:
+                    assert isinstance(vals, tuple) and len(k) == len(vals)
+                except Exception:
                     raise RuntimeError(
                         f"For tuple-based keys, expecting tuple of same length as {k}, got: {vals}"
                     )
                 for i, new_key in enumerate(k):
                     # Insert back at the same level
                     res[new_key] = vals[i]
+        return res
 
-    def _add_rol_keys_to_drop_inplace(
-        self, k_set: set, msg: dict, key_prefix: str = ""
-    ) -> None:
+    def _get_keys_to_drop_set(self, source: dict, key_prefix: str = "") -> set:
         """
-        Searches `msg`, then takes each ROL object found and adds the
-          nested key where the ROL was found.
-
-        The logic of which relative key to delete is handled elsewhere!
+        Finds all keys where an ROL is found
         """
-        for k, v in msg.items():
-            curr_nesting = f"{key_prefix}.{k}" if key_prefix != "" else k
+        res = set()
+        for k, v in source.items():
+            curr_key = f"{key_prefix}.{k}" if key_prefix != "" else k
             if issubclass(type(v), dict):
-                self._add_rol_keys_to_drop_inplace(k_set, v, curr_nesting)
-            elif type(v) == list:
+                res |= self._get_keys_to_drop_set(v, curr_key)
+            elif isinstance(v, list):
                 for i, item in enumerate(v):
-                    indexed_nesting = f"{curr_nesting}[{i}]"
+                    indexed_keypath = f"{curr_key}[{i}]"
                     if issubclass(type(item), dict):
-                        self._add_rol_keys_to_drop_inplace(k_set, item, indexed_nesting)
-                    elif type(v) == ROL:
-                        k_set.add(indexed_nesting)
-            elif type(v) == ROL:
-                k_set.add(curr_nesting)
+                        res |= self._get_keys_to_drop_set(item, indexed_keypath)
+                    elif isinstance(v, ROL):
+                        res.add(indexed_keypath)
+            elif isinstance(v, ROL):
+                res.add(curr_key)
+        return res
