@@ -58,29 +58,22 @@ def _nested_delete(source: dict, key: str) -> dict:
     with the requested key set to `None`
     """
     res = deepcopy(benedict(source))
-    keypaths = [keypath_util.parse_keys(k, ".") for k in key.split("[*].")]
-    # Case: value has an ROL object
-    v = get(res, key)
-    if isinstance(v, ROL):
-        assert v.value < 0
-        keypaths[-1] = keypaths[-1][: v.value]
+    keypaths = key.split("[*].", 1)
     # Get up to the last key in keypath, then set that key to None
     #  We set to None instead of popping to preserve indices
-    try:
-        curr_keypath = keypaths[0]
-        if len(keypaths) > 1:
-            remaining_key = ".".join(key.split("[*].", 1)[1:])
-            assert isinstance(res[curr_keypath][0], dict)
-            res[curr_keypath] = [
-                _nested_delete(r, remaining_key) if isinstance(r, dict) else None
-                for r in res[curr_keypath]
-            ]
-        else:
-            res[curr_keypath] = None
-    except Exception as e:
-        raise IndexError(
-            f"Failed to perform _nested_delete on key: {key}, Error: {e}, Input: {source}"
-        )
+    curr_keypath = keypath_util.parse_keys(keypaths[0], '.')
+    if len(keypaths) > 1:
+        res[curr_keypath] = [
+            _nested_delete(r, keypaths[1]) if isinstance(r, dict) else None
+            for r in res[curr_keypath]
+        ]
+    else:
+        # Case: value has an ROL object
+        v = res[curr_keypath]
+        if isinstance(v, ROL):
+            assert v.value < 0
+            curr_keypath = curr_keypath[:v.value]
+        res[curr_keypath] = None
     return res
 
 
