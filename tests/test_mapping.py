@@ -143,13 +143,25 @@ def test_rol_drop(simple_data):
 def test_tuple_unwrapping(nested_data):
     source = nested_data
 
+    def get_jkl() -> dict:
+        return {"j": 7, "k": 8, "l": 9}
+
     def mapping(m: dict) -> dict:
         return {
             ("a", "b", "c"): get(m, "data[0].patient.ints", apply=tuple),
             "nested": {("d", "e", "f"): get(m, "data[1].patient.ints", apply=tuple)},
             ("g", "h", "i"): None,  # This should get removed
+            ("j", "k", "l"): get_jkl(),
         }
 
     mapper = Mapper(mapping, remove_empty=True)
     res = mapper(source)
-    assert res == {"a": 1, "b": 2, "c": 3, "nested": {"d": 4, "e": 5, "f": 6}}
+    assert res == {
+        "a": 1,
+        "b": 2,
+        "c": 3,
+        "nested": {"d": 4, "e": 5, "f": 6},
+        "j": 7,
+        "k": 8,
+        "l": 9,
+    }

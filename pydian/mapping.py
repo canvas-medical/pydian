@@ -82,26 +82,30 @@ class Mapper:
         #       original object pointer `res[k]` as opposed to `v`
         res = deepcopy(source)
         for k, v in source.items():
-            if issubclass(type(v), dict):
+            if isinstance(k, tuple):
+                # Update the original dict
+                vals = res.pop(k)
+                if vals:
+                    try:
+                        assert isinstance(vals, (tuple, dict)) and len(k) == len(vals)
+                    except Exception:
+                        raise RuntimeError(
+                            f"For tuple-based keys, expecting tuple or dict matching {k}, got: {vals}"
+                        )
+                    for i, new_key in enumerate(k):
+                        # Insert back at the same level
+                        if isinstance(vals, tuple):
+                            res[new_key] = vals[i]
+                        elif isinstance(vals, dict):
+                            res[new_key] = vals[new_key]
+            # Keep recursing as necessary
+            elif issubclass(type(v), dict):
                 res[k] = self._unpack_tuple_keys(res[k])
             elif isinstance(v, list):
                 res[k] = [
                     self._unpack_tuple_keys(obj) if issubclass(type(obj), dict) else obj
                     for obj in res[k]
                 ]
-            elif isinstance(k, tuple):
-                # Update the original dict
-                vals = res.pop(k)
-                if vals:
-                    try:
-                        assert isinstance(vals, tuple) and len(k) == len(vals)
-                    except Exception:
-                        raise RuntimeError(
-                            f"For tuple-based keys, expecting tuple of same length as {k}, got: {vals}"
-                        )
-                    for i, new_key in enumerate(k):
-                        # Insert back at the same level
-                        res[new_key] = vals[i]
         return res
 
     def _get_keys_to_drop_set(self, source: dict, key_prefix: str = "") -> set:
