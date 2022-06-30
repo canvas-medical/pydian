@@ -44,12 +44,11 @@ def mapping_fn(m: dict) -> dict:
         'targetList': get(m, 'sourceList[*].val') # Unwrap list structures with [*]
     }
 
-# A `Mapper` class that runs the mapping function and provides some built-in post-processing logic
+# A `Mapper` class that runs the provided function and some built-in post-processing features
 mapper = Mapper(mapping_fn)
 
 # A result that syntactically matches the mapping!
-result = mapper(source)
-assert result ==  {
+assert mapper(source) == {
     'staticData': 'Any JSON primitive',
     'targetId': 'Abc123',
     'targetArray': [
@@ -89,53 +88,39 @@ mapper = Mapper(mapping_fn, remove_empty=True) # Defaults to False
 ### Conditional dropping
 This can be done during value evaluation in `get` (preferred) and/or as a postprocessing step in the `Mapper` object:
 ```python
-from pydian import get, Mapper, ROL
+from pydian import Mapper, get
+from pydian import ROL
 
 source = {
     # `source_k` is missing!
 }
 
-# TODO: Fix this example
-def example_mapping_fn(m: dict) -> dict:
+def mapping_fn(m: dict) -> dict:
     return {
-        'first_obj': {
+        'obj': {
             # Specify in `get`, or as an if comprehension
             'res_k': get(m, 'source_k', drop_level=ROL.CURRENT), # Sets the entire object to `None` if this is `None`
             'other_k': 'Some value',
-        },
-        'second_obj': {
-            'list_k': [
-                'first',
-                'second',
-                None
-            ]
-        },
+        }
     }
 
-mapper = Mapper(example_mapping_fn)
+mapper = Mapper(mapping_fn)
 
 assert mapper(source) == {
-    'first_obj': None,
-    'second_obj': {
-        'list_k': [
-            'first',
-            'second',
-            None
-        ]
-    },
+    'obj': None
 }
 ```
 
 ### Tuple-key comprehension
 Need to get multiple key-value pairs from a single function call? This can done within the mapping function:
 ```python
-from pydian import get, Mapper
+from pydian import Mapper, get
 
 source = {
     'source_list': list(range(3)) # [0, 1, 2]
 }
 
-def example_mapping_fn(m: dict) -> dict:
+def mapping_fn(m: dict) -> dict:
     return {
         # A tuple-key and tuple-value will be unwrapped in-order
         ('first',
@@ -143,7 +128,7 @@ def example_mapping_fn(m: dict) -> dict:
         'third'): get(m, 'source_list', apply=tuple)
     }
 
-mapper = Mapper(example_mapping_fn)
+mapper = Mapper(mapping_fn)
 
 assert mapper(source) == {
     'first': 0,
