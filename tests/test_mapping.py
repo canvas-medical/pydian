@@ -147,6 +147,7 @@ def test_tuple_unwrapping(nested_data):
         return {
             ("a", "b", "c"): get(m, "data[0].patient.ints", apply=tuple),
             "nested": {("d", "e", "f"): get(m, "data[1].patient.ints", apply=tuple)},
+            ("g", "h", "i"): None,  # This should get removed
         }
 
     mapper = Mapper(mapping, remove_empty=True)
