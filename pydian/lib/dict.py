@@ -26,6 +26,7 @@ def get(
         res = drop_level
     return res
 
+
 def _nested_get(source: dict, key: str, default: Any = None) -> Any:
     """
     Expects `.`-delimited string and tries to get the item in the dict.
@@ -42,7 +43,7 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
     """
     res = deepcopy(benedict(source))
     keypaths = key.split("[*].", 1)
-    if '[*]' in keypaths[0]:
+    if "[*]" in keypaths[0]:
         res = res.get(keypaths[0][:-3])
     else:
         res = res.get(keypaths[0])
@@ -61,7 +62,7 @@ def _nested_delete(source: dict, key: str) -> dict:
     keypaths = key.split("[*].", 1)
     # Get up to the last key in keypath, then set that key to None
     #  We set to None instead of popping to preserve indices
-    curr_keypath = keypath_util.parse_keys(keypaths[0], '.')
+    curr_keypath = keypath_util.parse_keys(keypaths[0], ".")
     if len(keypaths) > 1:
         res[curr_keypath] = [
             _nested_delete(r, keypaths[1]) if isinstance(r, dict) else None
@@ -72,7 +73,7 @@ def _nested_delete(source: dict, key: str) -> dict:
         v = res[curr_keypath]
         if isinstance(v, ROL):
             assert v.value < 0
-            curr_keypath = curr_keypath[:v.value]
+            curr_keypath = curr_keypath[: v.value]
         res[curr_keypath] = None
     return res
 
