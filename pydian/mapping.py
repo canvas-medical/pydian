@@ -43,16 +43,12 @@ class Mapper:
         self.remove_empty = remove_empty
 
     def __call__(self, source: dict, **kwargs: Any) -> dict:
-        try:
-            res = self.map_fn(source, **kwargs)
-            assert issubclass(type(res), dict)
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to call {self.map_fn} on source data. Error: {e}"
+        res = self.map_fn(source, **kwargs)
+        if not isinstance(res, dict):
+            raise TypeError(
+                f"Expected {self.map_fn} output to return a dict, got type: {type(res)}"
             )
-
-        if isinstance(res, dict):
-            res = DictWrapper(res)
+        res = DictWrapper(res)
 
         # Unpack Tuple-based keys
         # NOTE: `benedict` assumes tuple keys are intended as a keypath,
