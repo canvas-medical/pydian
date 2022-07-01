@@ -2,7 +2,7 @@ from benedict import benedict
 from copy import deepcopy
 from typing import Any, Callable
 from pydian.lib.util import remove_empty_values
-from pydian.lib.dict import get, _nested_delete
+from pydian.dict import get, _nested_delete
 from pydian.lib.enums import RelativeObjectLevel as ROL
 
 

@@ -2,7 +2,7 @@ from typing import Any, Callable
 import re
 from copy import deepcopy
 from itertools import chain
-from .enums import RelativeObjectLevel as ROL
+from .lib.enums import RelativeObjectLevel as ROL
 from benedict import benedict
 from benedict.dicts.keypath import keypath_util
 
@@ -33,12 +33,15 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
 
     If the dict contains an array, the correct index is expected, e.g. for a dict d:
         d.a.b[0]
-    will try d['a']['b'][0], where a should be a dict containing b which should be an array with at least 1 item
+      will try d['a']['b'][0], where a should be a dict containing 
+      b which should be an array with at least 1 item.
+
 
     If d[*] is passed, then that means return a list of all elements. E.g. for a dict d:
-    d[*].a.b
-    will try to get e['a']['b'] for e in d
+        d[*].a.b
+      will try to get e['a']['b'] for e in d
 
+    TODO: Add support for list slicing, e.g. [:1], [1:], [:-1], etc.
     TODO: Add support for querying, maybe e.g. [?: thing.val==1]
     """
     res = deepcopy(benedict(source))
@@ -56,7 +59,7 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
 def _nested_delete(source: dict, key: str) -> dict:
     """
     Has same syntax as _nested_get, except returns the original source
-    with the requested key set to `None`
+      with the requested key set to `None`
     """
     res = deepcopy(benedict(source))
     keypaths = key.split("[*].", 1)

@@ -1,5 +1,5 @@
 import pytest
-from pydian.lib.dict import _nested_delete
+from pydian.dict import _nested_delete
 from pydian import get
 from copy import deepcopy
 
