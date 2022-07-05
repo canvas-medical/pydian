@@ -98,6 +98,12 @@ def test_nested_get(nested_data):
             "CASE_unwrap_list_twice": get(m, "data[*].patient.ints[*]"),
             "CASE_unwrap_list_dict": get(m, "data[*].patient.dicts[*].num"),
             "CASE_unwrap_list_dict_twice": get(m, "data[*].patient.dicts[*].num[*]"),
+            # Expect this to get removed
+            "CASE_bad_key": {
+                'single': get(m, 'missing.key'),
+                'unwrap': get(m, 'missing[*].key'),
+                'unwrap_twice': get(m, 'missing[*].key[*].here')
+            } 
         }
 
     mapper = Mapper(mapping, remove_empty=True)

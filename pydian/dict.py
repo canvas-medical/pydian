@@ -50,7 +50,7 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
         res = res.get(keypaths[0][:-3])
     else:
         res = res.get(keypaths[0])
-    if len(keypaths) > 1:
+    if len(keypaths) > 1 and res is not None:
         res = [_nested_get(v, keypaths[1]) for v in res]
     res = __handle_ending_star_unwrap(res, key)
     return res if res is not None else default
