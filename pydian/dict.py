@@ -33,7 +33,7 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
 
     If the dict contains an array, the correct index is expected, e.g. for a dict d:
         d.a.b[0]
-      will try d['a']['b'][0], where a should be a dict containing 
+      will try d['a']['b'][0], where a should be a dict containing
       b which should be an array with at least 1 item.
 
 
