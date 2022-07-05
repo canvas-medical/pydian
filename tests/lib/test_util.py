@@ -1,7 +1,7 @@
 from pydian.lib.util import remove_empty_values
 
 
-def test_removing_empty_values():
+def test_remove_empty_values():
     # For each test case, tuple format: (input, expected_output)
     test_cases = [
         # List cases
