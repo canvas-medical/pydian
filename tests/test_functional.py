@@ -24,4 +24,4 @@ def test_first_of() -> None:
     ]
 
     for incoming, first_n, expected_output in first_n_test_cases:
-        assert first_of(incoming, take_n=first_n) == expected_output
+        assert first_of(incoming, keep_n=first_n) == expected_output
