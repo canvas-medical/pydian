@@ -8,16 +8,15 @@ from pydian import Mapper, get
 
 # Some arbitrary source data
 source = {
-    'sourceId': 'Abc123',
-    'sourceName': 'Pydian Example',
-    'sourceNested': {
-        'some': {
+    'id': 'Abc123',
+    'some': {
+        'deeply': {
             'nested': {
                 'value': 'here!'
             }
         }
     },
-    'sourceList': [
+    'list_of_objects': [
         {'val': 1},
         {'val': 2},
         {'val': 3}
@@ -27,15 +26,13 @@ source = {
 # A centralized mapping function -- specify your logic as data!
 def mapping_fn(m: dict) -> dict:
     return {
-        'staticData': 'Any JSON primitive',
-        'targetId': get(m, 'sourceId'),
-        'targetArray': [
-            get(m, 'sourceId'),
-            get(m, 'sourceName')
-        ],
-        'targetNested': get(m, 'sourceNested.some.nested.value', apply=str.upper), # Get deeply nested values
-        'targetMaybe': get(m, 'sourceMaybe.nope.its.None', apply=str.upper), # Null-check handling is built-in!
-        'targetList': get(m, 'sourceList[*].val') # Unwrap list structures with [*]
+        'static_value': 'Some static data',
+        'res_id': get(m, 'id'),
+        'res_list': [{
+            'uppercase_nested_val': get(m, 'some.deeply.nested.value', apply=str.upper), # Get deeply nested values
+            'unwrapped_list': get(m, 'list_of_objects[*].val'), # Unwrap list structures with [*]
+            'maybe_present_value?': get(m, 'somekey.nope.not.there', apply=str.upper), # Null-check handling is built-in!
+        }]
     }
 
 # A `Mapper` class that runs the provided function and some built-in post-processing features
@@ -43,15 +40,13 @@ mapper = Mapper(mapping_fn)
 
 # A result that syntactically matches the mapping!
 assert mapper(source) == {
-    'staticData': 'Any JSON primitive',
-    'targetId': 'Abc123',
-    'targetArray': [
-        'Abc123',
-        'Pydian Example'
-    ],
-    'targetNested': 'HERE!',
-    'targetMaybe': None,
-    'targetList': [1, 2, 3]
+    'static_value': 'Some static data',
+    'res_id': 'Abc123',
+    'res_list': [{
+        'uppercase_nested_val': 'HERE!',
+        'unwrapped_list': [1, 2, 3],
+        'maybe_present_value?': None,
+    }],
 }
 ```
 
@@ -130,3 +125,7 @@ assert mapper(source) == {
     'third': 2
 }
 ```
+
+## Issues
+
+Please submit a GitHub Issue for any bugs + feature requests and we'll take a look!
