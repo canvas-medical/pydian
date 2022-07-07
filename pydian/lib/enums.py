@@ -1,24 +1,23 @@
 from enum import Enum
 
 
-class RelativeObjectLevel(Enum):
+class DeleteRelativeObjectPlaceholder(Enum):
     """
-    A RelativeObjectLevel (abbrv. ROL) is the object relative to
-    the current value. An "object" in this context is a dict or a list.
-    Thus, CURRENT is the object containing the value, PARENT is the
-    parent object containing the current object (if it exists), etc.
+    A DeleteRelativeObjectPlaceholder (abbrv. DROP) is a placeholder object 
+      that indicates the object relative to the current value should be 
+      dropped. An "object" in this context is a dict or a list.
 
     Examples:
 
-    {   <-- Grandparent
-        'A': {   <-- Parent
+    {   <-- Grandparent (rel to _value)
+        'A': {   <-- Parent (rel to _value)
             'B': {      <-- Current (rel to _value)
                 'C': _value
             }
         }
     }
 
-    {   <-- Grandparent
+    {   <-- Grandparent (rel to _value1 and _value2)
         'A': [  <-- Parent (rel to _value1 and _value2)
             {       <-- Current (rel to _value1)
                 'B': _value1
@@ -30,7 +29,7 @@ class RelativeObjectLevel(Enum):
     }
     """
 
-    CURRENT = -1
+    CURRENT_OBJECT = -1
     PARENT = -2
     GRANDPARENT = -3
     GREATGRANDPARENT = -4

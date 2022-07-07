@@ -89,7 +89,7 @@ mapper = Mapper(mapping_fn, remove_empty=True) # Defaults to False
 This can be done during value evaluation in `get` (preferred) and/or as a postprocessing step in the `Mapper` object:
 ```python
 from pydian import Mapper, get
-from pydian import ROL
+from pydian import DROP
 
 source = {
     # `source_k` is missing!
@@ -99,7 +99,7 @@ def mapping_fn(m: dict) -> dict:
     return {
         'obj': {
             # Specify in `get`, or as an if comprehension
-            'res_k': get(m, 'source_k', drop_level=ROL.CURRENT), # Sets the entire object to `None` if this is `None`
+            'res_k': get(m, 'source_k', drop_level=DROP.CURRENT_OBJECT), # Sets the entire object to `None` if this is `None`
             'other_k': 'Some value',
         }
     }

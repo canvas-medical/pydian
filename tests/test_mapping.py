@@ -1,5 +1,5 @@
 import pytest
-from pydian import Mapper, ROL, get
+from pydian import Mapper, DROP, get
 
 
 @pytest.fixture
@@ -100,10 +100,10 @@ def test_nested_get(nested_data):
             "CASE_unwrap_list_dict_twice": get(m, "data[*].patient.dicts[*].num[*]"),
             # Expect this to get removed
             "CASE_bad_key": {
-                'single': get(m, 'missing.key'),
-                'unwrap': get(m, 'missing[*].key'),
-                'unwrap_twice': get(m, 'missing[*].key[*].here')
-            } 
+                "single": get(m, "missing.key"),
+                "unwrap": get(m, "missing[*].key"),
+                "unwrap_twice": get(m, "missing[*].key[*].here"),
+            },
         }
 
     mapper = Mapper(mapping, remove_empty=True)
@@ -126,15 +126,15 @@ def test_rol_drop(simple_data):
         return {
             "CASE_parent_keep": {
                 "CASE_curr_drop": {
-                    "a": get(m, "notFoundKey", drop_level=ROL.CURRENT),
+                    "a": get(m, "notFoundKey", drop_level=DROP.CURRENT_OBJECT),
                     "b": "someValue",
                 },
                 "CASE_curr_keep": {
-                    "id": get(m, "data.patient.id", drop_level=ROL.CURRENT)
+                    "id": get(m, "data.patient.id", drop_level=DROP.CURRENT_OBJECT)
                 },
             },
             "CASE_list": [
-                {"a": get(m, "notFoundKey", drop_level=ROL.PARENT), "b": "someValue"},
+                {"a": get(m, "notFoundKey", drop_level=DROP.PARENT), "b": "someValue"},
                 {"a": "someValue", "b": "someValue"},
             ],
         }
@@ -171,5 +171,5 @@ def test_tuple_unwrapping(nested_data):
         "j": 7,
         "k": 8,
         "l": 9,
-        "m": 10
+        "m": 10,
     }

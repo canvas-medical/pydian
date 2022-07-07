@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Any, Callable
 from pydian.lib.util import remove_empty_values
 from pydian.dict import get, _nested_delete
-from pydian.lib.enums import RelativeObjectLevel as ROL
+from pydian.lib.enums import DeleteRelativeObjectPlaceholder as DROP
 
 
 class DictWrapper(benedict):
@@ -12,7 +12,7 @@ class DictWrapper(benedict):
         key: str,
         default: Any = None,
         apply: Callable | None = None,
-        drop_level: ROL | None = None,
+        drop_level: DROP | None = None,
     ) -> Any:
         if "*" in key:
             return get(self, key, default, apply, drop_level)
@@ -55,7 +55,7 @@ class Mapper:
         #       so to get around this we manipulate the underlying dict
         res = self._unpack_tuple_keys(res.dict())
 
-        # Handle any ROL-flagged values
+        # Handle any DROP-flagged values
         keys_to_drop = self._get_keys_to_drop_set(res)
 
         # Remove the keys to drop
@@ -106,7 +106,7 @@ class Mapper:
 
     def _get_keys_to_drop_set(self, source: dict, key_prefix: str = "") -> set:
         """
-        Finds all keys where an ROL is found
+        Finds all keys where an DROP is found
         """
         res = set()
         for k, v in source.items():
@@ -118,8 +118,8 @@ class Mapper:
                     indexed_keypath = f"{curr_key}[{i}]"
                     if issubclass(type(item), dict):
                         res |= self._get_keys_to_drop_set(item, indexed_keypath)
-                    elif isinstance(v, ROL):
+                    elif isinstance(v, DROP):
                         res.add(indexed_keypath)
-            elif isinstance(v, ROL):
+            elif isinstance(v, DROP):
                 res.add(curr_key)
         return res

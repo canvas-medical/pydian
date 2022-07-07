@@ -2,7 +2,7 @@ from typing import Any, Callable
 import re
 from copy import deepcopy
 from itertools import chain
-from .lib.enums import RelativeObjectLevel as ROL
+from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
 from benedict import benedict
 from benedict.dicts.keypath import keypath_util
 
@@ -12,7 +12,7 @@ def get(
     key: str,
     default: Any = None,
     apply: Callable | None = None,
-    drop_level: ROL | None = None,
+    drop_level: DROP | None = None,
 ):
     res = _nested_get(source, key, default)
     if res and apply:
@@ -72,9 +72,9 @@ def _nested_delete(source: dict, key: str) -> dict:
             for r in res[curr_keypath]
         ]
     else:
-        # Case: value has an ROL object
+        # Case: value has an DROP object
         v = res[curr_keypath]
-        if isinstance(v, ROL):
+        if isinstance(v, DROP):
             assert v.value < 0
             curr_keypath = curr_keypath[: v.value]
         res[curr_keypath] = None
