@@ -35,7 +35,7 @@ class Mapper:
         self,
         map_fn: Callable[[dict], dict],
         remove_empty: bool = False,
-    ) -> None:
+    ) -> 'Mapper':
         """
         Calls `map_fn` and then performs postprocessing into the final dict
         """
