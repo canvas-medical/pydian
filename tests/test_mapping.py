@@ -55,7 +55,6 @@ def nested_data() -> dict:
 
 def test_get(simple_data):
     source = simple_data
-    mod_fn = lambda msg: msg["data"]["patient"]["id"] + "_modified"
 
     def mapping(m: dict) -> dict:
         return {
@@ -63,7 +62,7 @@ def test_get(simple_data):
             "CASE_single": get(m, "data"),
             "CASE_nested": get(m, "data.patient.id"),
             "CASE_nested_as_list": [get(m, "data.patient.active")],
-            "CASE_modded": mod_fn(m),
+            "CASE_modded": get(m, "data.patient.id", apply=lambda s: s + "_modified"),
             "CASE_index_list": {
                 "first": get(m, "list_data[0].patient"),
                 "second": get(m, "list_data[1].patient"),
@@ -78,7 +77,7 @@ def test_get(simple_data):
         "CASE_single": source.get("data"),
         "CASE_nested": source["data"]["patient"]["id"],
         "CASE_nested_as_list": [source["data"]["patient"]["active"]],
-        "CASE_modded": mod_fn(source),
+        "CASE_modded": source["data"]["patient"]["id"] + "_modified",
         "CASE_index_list": {
             "first": source["list_data"][0]["patient"],
             "second": source["list_data"][1]["patient"],
@@ -119,18 +118,18 @@ def test_nested_get(nested_data):
     }
 
 
-def test_rol_drop(simple_data):
+def test_drop(simple_data):
     source = simple_data
 
     def mapping(m: dict):
         return {
             "CASE_parent_keep": {
                 "CASE_curr_drop": {
-                    "a": get(m, "notFoundKey", drop_level=DROP.CURRENT_OBJECT),
+                    "a": get(m, "notFoundKey", drop_level=DROP.THIS_OBJECT),
                     "b": "someValue",
                 },
                 "CASE_curr_keep": {
-                    "id": get(m, "data.patient.id", drop_level=DROP.CURRENT_OBJECT)
+                    "id": get(m, "data.patient.id", drop_level=DROP.THIS_OBJECT)
                 },
             },
             "CASE_list": [
@@ -143,33 +142,4 @@ def test_rol_drop(simple_data):
     res = mapper(source)
     assert res == {
         "CASE_parent_keep": {"CASE_curr_keep": {"id": get(source, "data.patient.id")}}
-    }
-
-
-def test_tuple_unwrapping(nested_data):
-    source = nested_data
-
-    def get_jkl() -> dict:
-        return {"j": 7, "k": 8, "l": 9}
-
-    def mapping(m: dict) -> dict:
-        return {
-            ("a", "b", "c"): get(m, "data[0].patient.ints", apply=tuple),
-            "nested": {("d", "e", "f"): get(m, "data[1].patient.ints", apply=tuple)},
-            ("g", "h", "i"): None,  # This should get removed
-            ("j", "k", "l"): get_jkl(),
-            ("m", "n"): {"m": 10, "n": None},
-        }
-
-    mapper = Mapper(mapping, remove_empty=True)
-    res = mapper(source)
-    assert res == {
-        "a": 1,
-        "b": 2,
-        "c": 3,
-        "nested": {"d": 4, "e": 5, "f": 6},
-        "j": 7,
-        "k": 8,
-        "l": 9,
-        "m": 10,
     }

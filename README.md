@@ -88,7 +88,7 @@ def mapping_fn(m: dict) -> dict:
     return {
         'obj': {
             # Specify in `get`, or as an if comprehension
-            'res_k': get(m, 'source_k', drop_level=DROP.CURRENT_OBJECT), # Sets the entire object to `None` if this is `None`
+            'res_k': get(m, 'source_k', drop_level=DROP.THIS_OBJECT), # Sets the entire object to `None` if this is `None`
             'other_k': 'Some value',
         }
     }

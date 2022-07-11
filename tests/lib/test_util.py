@@ -2,18 +2,20 @@ from pydian.lib.util import remove_empty_values
 
 
 def test_remove_empty_values():
-    # For each test case, tuple format: (input, expected_output)
-    test_cases = [
-        # List cases
-        ([[]], []),
-        (["a", [], None], ["a"]),
-        # Dict cases
-        ({"empty_list": [], "empty_dict": {}}, {}),
-        ({"empty_list": [], "empty_dict": {}, "a": "b"}, {"a": "b"}),
-        # Nested cases
-        ({"empty_list": [{}, {}, {}], "empty_dict": {"someKey": {}}}, {}),
-        ([{}, ["", None], [{"empty": {"dict": {"key": None}}}]], []),
-    ]
-
-    for incoming, expected_output in test_cases:
-        assert remove_empty_values(incoming) == expected_output
+    # List cases
+    assert remove_empty_values([[], {}]) == []
+    assert remove_empty_values(["a", [], {}, "", None]) == ["a"]
+    # Dict cases
+    assert remove_empty_values({"empty_list": [], "empty_dict": {}}) == {}
+    assert remove_empty_values({"empty_list": [], "empty_dict": {}, "a": "b"}) == {
+        "a": "b"
+    }
+    # Nested cases
+    assert (
+        remove_empty_values([{}, ["", None], [{"empty": {"dict": {"key": None}}}]])
+        == []
+    )
+    assert (
+        remove_empty_values({"empty_list": [{}, {}, {}], "empty_dict": {"someKey": {}}})
+        == {}
+    )

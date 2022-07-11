@@ -58,7 +58,10 @@ def test_nested_delete(nested_data: dict) -> None:
         res = _nested_delete(source, k)
         assert get(res, k) is None
         assert get(orig, k) is not None
-    # Test [*] format
+
+
+def test_nested_delete_single_star(nested_data: dict) -> None:
+    orig = nested_data
     source = deepcopy(nested_data)
     single_star_keys = ("list_data[*].patient.dicts",)
     for k in single_star_keys:
@@ -66,6 +69,11 @@ def test_nested_delete(nested_data: dict) -> None:
         assert len(get(res, k)) == len(get(orig, k))
         assert not any(get(res, k))
         assert any(get(orig, k))
+
+
+def test_nested_delete_double_star(nested_data: dict) -> None:
+    orig = nested_data
+    source = deepcopy(nested_data)
     double_star_keys = ("list_data[*].patient.dicts[*].num",)
     for k in double_star_keys:
         res = _nested_delete(source, k)

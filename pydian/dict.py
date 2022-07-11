@@ -44,7 +44,7 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
     TODO: Add support for list slicing, e.g. [:1], [1:], [:-1], etc.
     TODO: Add support for querying, maybe e.g. [?: thing.val==1]
     """
-    res = deepcopy(benedict(source))
+    res = benedict(source)
     keypaths = key.split("[*].", 1)
     if "[*]" in keypaths[0]:
         res = res.get(keypaths[0][:-3])
@@ -52,7 +52,7 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
         res = res.get(keypaths[0])
     if len(keypaths) > 1 and res is not None:
         res = [_nested_get(v, keypaths[1]) for v in res]
-    res = __handle_ending_star_unwrap(res, key)
+    res = _handle_ending_star_unwrap(res, key)
     return res if res is not None else default
 
 
@@ -81,10 +81,10 @@ def _nested_delete(source: dict, key: str) -> dict:
     return res
 
 
-def __handle_ending_star_unwrap(res: list, key: str) -> list:
+def _handle_ending_star_unwrap(res: list, key: str) -> list:
     # HACK: Handle unwrapping if specified at the end
     # TODO: Find a nicer way to do this. Works for now...
     if key.endswith("[*]") and isinstance(res, list) and isinstance(res[0], list):
-        res = [l for l in res if l != None]
-        res = list(chain(*res))
+        res = [l for l in res if l is not None]
+        res = list(chain.from_iterable(res))
     return res
