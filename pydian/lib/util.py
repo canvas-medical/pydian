@@ -2,7 +2,7 @@ from collections.abc import Collection
 from typing import Any
 
 
-def remove_empty_values(input: list | dict):
+def remove_empty_values(input: list | dict) -> list | dict:
     """
     Removes empty inner lists/dicts.
     """

@@ -9,9 +9,9 @@ from pydian.lib.enums import DeleteRelativeObjectPlaceholder as DROP
 class Mapper:
     def __init__(
         self,
-        map_fn: Callable[[Mapping, ...], dict],
+        map_fn: Callable[[Mapping], dict],
         remove_empty: bool = False,
-    ) -> "Mapper":
+    ) -> None:
         """
         Calls `map_fn` and then performs postprocessing into the final dict
         """
@@ -40,7 +40,7 @@ class Mapper:
 
     def _get_keys_to_drop_set(self, source: dict, key_prefix: str = "") -> set:
         """
-        Finds all keys where an DROP is found
+        Finds all keys where a DROP object is found
         """
         res = set()
         for k, v in source.items():

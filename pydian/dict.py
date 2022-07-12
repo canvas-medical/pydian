@@ -33,16 +33,15 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
 
     If the dict contains an array, the correct index is expected, e.g. for a dict d:
         d.a.b[0]
-      will try d['a']['b'][0], where a should be a dict containing
-      b which should be an array with at least 1 item.
+      will try d['a']['b'][0], where b should be an array with at least 1 item.
 
 
-    If d[*] is passed, then that means return a list of all elements. E.g. for a dict d:
-        d[*].a.b
-      will try to get e['a']['b'] for e in d
+    If [*] is passed, then that means get into each object in the list. E.g. for a list l:
+        l[*].a.b
+      will return the following: [d['a']['b'] for d in l]
 
     TODO: Add support for list slicing, e.g. [:1], [1:], [:-1], etc.
-    TODO: Add support for querying, maybe e.g. [?: thing.val==1]
+    TODO: Add support for querying, maybe e.g. [?:key=1]
     """
     res = benedict(source)
     keypaths = key.split("[*].", 1)
@@ -81,10 +80,15 @@ def _nested_delete(source: dict, key: str) -> dict:
     return res
 
 
-def _handle_ending_star_unwrap(res: list, key: str) -> list:
+def _handle_ending_star_unwrap(res: Any, key: str) -> Any | list:
     # HACK: Handle unwrapping if specified at the end
     # TODO: Find a nicer way to do this. Works for now...
-    if key.endswith("[*]") and isinstance(res, list) and isinstance(res[0], list):
+    if (
+        key.endswith("[*]")
+        and isinstance(res, list)
+        and len(res) > 0
+        and isinstance(res[0], list)
+    ):
         res = [l for l in res if l is not None]
         res = list(chain.from_iterable(res))
     return res
