@@ -88,7 +88,7 @@ def test_get(simple_data):
 def test_nested_get(nested_data):
     source = nested_data
 
-    def mapping(m: dict):
+    def mapping(m: dict) -> dict:
         return {
             "CASE_constant": 123,
             "CASE_unwrap_active": get(m, "data[*].patient.active"),
@@ -121,7 +121,7 @@ def test_nested_get(nested_data):
 def test_drop(simple_data):
     source = simple_data
 
-    def mapping(m: dict):
+    def mapping(m: dict) -> dict:
         return {
             "CASE_parent_keep": {
                 "CASE_curr_drop": {
@@ -143,3 +143,20 @@ def test_drop(simple_data):
     assert res == {
         "CASE_parent_keep": {"CASE_curr_keep": {"id": get(source, "data.patient.id")}}
     }
+
+
+def test_drop_out_of_bounds(simple_data):
+    source = simple_data
+
+    def mapping(m: dict) -> dict:
+        return {
+            "parent": {
+                "CASE_no_grandparent": get(
+                    m, "notFoundKey", drop_level=DROP.GREATGRANDPARENT
+                )
+            }
+        }
+
+    mapper = Mapper(mapping)
+    res = mapper(source)
+    assert res == {}

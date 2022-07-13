@@ -64,6 +64,9 @@ def _nested_delete(source: dict, keys_to_drop: Iterable[str]) -> dict:
         # Check if value has a DROP object
         v = res[curr_keypath]
         if isinstance(v, DROP):
+            # If "out of bounds", return an empty dict
+            if -1 * v.value >= len(curr_keypath):
+                return dict()
             curr_keypath = curr_keypath[: v.value]
         res[curr_keypath] = None
     return res
