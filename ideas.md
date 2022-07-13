@@ -66,6 +66,22 @@ E.g.:
 ```python
 from pydian import Validator
 
+"""
+Ideas for valid key-value pairs in the schema:
+{
+    'key': 'primitive',
+    'key': 'primitive',
+    'key': ('primitive', int),
+    'key': ('primitive', int, int),
+    'key': type,
+    'key': (type, ),
+    'key': (type, int),
+    'key': (type, int, int),
+    'key': (type, callable),
+    'key': (type, callable, int),
+    'key': (type, callable, int, int),
+}
+"""
 v_map = {
     'resourceType': ('Patient', 1), # Exact str match, and required
     'name': [
