@@ -1,18 +1,20 @@
-from typing import Any, Callable, Iterable
 from copy import deepcopy
 from itertools import chain
-from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
+from typing import Any, Callable, Iterable, TypeVar, cast
+
 from benedict import benedict
 from benedict.dicts.keypath import keypath_util
 
+from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
+
 
 def get(
-    source: dict,
+    source: dict[str, Any],
     key: str,
     default: Any = None,
-    apply: Callable | None = None,
+    apply: Callable[[Any], Any] | None = None,
     drop_level: DROP | None = None,
-):
+) -> Any:
     res = _nested_get(source, key, default)
     if res and apply:
         try:
@@ -26,7 +28,7 @@ def get(
     return res
 
 
-def _nested_get(source: dict, key: str, default: Any = None) -> Any:
+def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     """
     Expects `.`-delimited string and tries to get the item in the dict.
 
@@ -54,7 +56,9 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
     return res if res is not None else default
 
 
-def _nested_delete(source: dict, keys_to_drop: Iterable[str]) -> dict:
+def _nested_delete(
+    source: dict[str, Any], keys_to_drop: Iterable[str]
+) -> dict[str, Any]:
     """
     Returns the dictionary with the requested keys set to `None`
     """
@@ -69,10 +73,13 @@ def _nested_delete(source: dict, keys_to_drop: Iterable[str]) -> dict:
                 return dict()
             curr_keypath = curr_keypath[: v.value]
         res[curr_keypath] = None
-    return res
+    return cast(dict[str, Any], res.dict())
 
 
-def _handle_ending_star_unwrap(res: Any, key: str) -> Any | list:
+T = TypeVar("T")
+
+
+def _handle_ending_star_unwrap(res: T, key: str) -> T | list[Any]:
     # HACK: Handle unwrapping if specified at the end
     # TODO: Find a nicer way to do this. Works for now...
     if (
@@ -81,6 +88,6 @@ def _handle_ending_star_unwrap(res: Any, key: str) -> Any | list:
         and len(res) > 0
         and isinstance(res[0], list)
     ):
-        res = [l for l in res if l is not None]
-        res = list(chain.from_iterable(res))
+        new_res = [l for l in res if l is not None]
+        return list(chain.from_iterable(new_res))
     return res

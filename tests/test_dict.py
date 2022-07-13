@@ -1,11 +1,14 @@
-import pytest
-from pydian.dict import _nested_delete
-from pydian import get
 from copy import deepcopy
+from typing import Any
+
+import pytest
+
+from pydian import get
+from pydian.dict import _nested_delete
 
 
 @pytest.fixture
-def nested_data() -> dict:
+def nested_data() -> dict[str, Any]:
     return {
         "const_data": 123,
         "nested_data": {"a": {"b": "c", "d": "e"}},
@@ -46,7 +49,7 @@ def nested_data() -> dict:
     }
 
 
-def test_nested_delete(nested_data: dict) -> None:
+def test_nested_delete(nested_data: dict[str, Any]) -> None:
     orig = nested_data
     source = deepcopy(nested_data)
     keys_to_drop = {

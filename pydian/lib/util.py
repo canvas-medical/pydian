@@ -1,7 +1,7 @@
 from collections.abc import Collection
 from typing import Any, TypeVar
 
-T = TypeVar("T", list, dict)
+T = TypeVar("T", list[Any], dict[str, Any])
 
 
 def remove_empty_values(input: T) -> T:

@@ -1,9 +1,12 @@
+from typing import Any
+
 import pytest
-from pydian import Mapper, DROP, get
+
+from pydian import DROP, Mapper, get
 
 
 @pytest.fixture
-def simple_data() -> dict:
+def simple_data() -> dict[str, Any]:
     return {
         "data": {"patient": {"id": "abc123", "active": True}},
         "list_data": [
@@ -14,7 +17,7 @@ def simple_data() -> dict:
 
 
 @pytest.fixture
-def nested_data() -> dict:
+def nested_data() -> dict[str, Any]:
     return {
         "data": [
             {
@@ -53,10 +56,10 @@ def nested_data() -> dict:
     }
 
 
-def test_get(simple_data):
+def test_get(simple_data: dict[str, Any]) -> None:
     source = simple_data
 
-    def mapping(m: dict) -> dict:
+    def mapping(m: dict[str, Any]) -> dict[str, Any]:
         return {
             "CASE_constant": 123,
             "CASE_single": get(m, "data"),
@@ -85,10 +88,10 @@ def test_get(simple_data):
     }
 
 
-def test_nested_get(nested_data):
+def test_nested_get(nested_data: dict[str, Any]) -> None:
     source = nested_data
 
-    def mapping(m: dict) -> dict:
+    def mapping(m: dict[str, Any]) -> dict[str, Any]:
         return {
             "CASE_constant": 123,
             "CASE_unwrap_active": get(m, "data[*].patient.active"),
@@ -118,10 +121,10 @@ def test_nested_get(nested_data):
     }
 
 
-def test_drop(simple_data):
+def test_drop(simple_data: dict[str, Any]) -> None:
     source = simple_data
 
-    def mapping(m: dict) -> dict:
+    def mapping(m: dict[str, Any]) -> dict[str, Any]:
         return {
             "CASE_parent_keep": {
                 "CASE_curr_drop": {
@@ -145,10 +148,10 @@ def test_drop(simple_data):
     }
 
 
-def test_drop_out_of_bounds(simple_data):
+def test_drop_out_of_bounds(simple_data: dict[str, Any]) -> None:
     source = simple_data
 
-    def mapping(m: dict) -> dict:
+    def mapping(m: dict[str, Any]) -> dict[str, Any]:
         return {
             "parent": {
                 "CASE_no_grandparent": get(

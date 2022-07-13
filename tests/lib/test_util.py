@@ -1,7 +1,7 @@
 from pydian.lib.util import remove_empty_values
 
 
-def test_remove_empty_values():
+def test_remove_empty_values() -> None:
     # List cases
     assert remove_empty_values([[], {}]) == []
     assert remove_empty_values(["a", [], {}, "", None]) == ["a"]

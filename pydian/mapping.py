@@ -1,13 +1,17 @@
-from typing import Any, Callable
-from pydian.lib.util import remove_empty_values
+from collections.abc import Callable
+from typing import Any, Concatenate, ParamSpec
+
 from pydian.dict import _nested_delete
 from pydian.lib.enums import DeleteRelativeObjectPlaceholder as DROP
+from pydian.lib.util import remove_empty_values
+
+P = ParamSpec("P")
 
 
 class Mapper:
     def __init__(
         self,
-        map_fn: Callable[[dict], dict],
+        map_fn: Callable[Concatenate[dict[str, Any], P], dict[str, Any]],
         remove_empty: bool = False,
     ) -> None:
         """
@@ -16,7 +20,7 @@ class Mapper:
         self.map_fn = map_fn
         self.remove_empty = remove_empty
 
-    def __call__(self, source: dict, **kwargs: Any) -> dict:
+    def __call__(self, source: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         res = self.map_fn(source, **kwargs)
 
         # Handle any DROP-flagged values
@@ -29,7 +33,9 @@ class Mapper:
 
         return res
 
-    def _get_keys_to_drop_set(self, source: dict, key_prefix: str = "") -> set:
+    def _get_keys_to_drop_set(
+        self, source: dict[str, Any], key_prefix: str = ""
+    ) -> set[str]:
         """
         Finds all keys where a DROP object is found
         """
