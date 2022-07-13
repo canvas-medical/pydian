@@ -1,5 +1,4 @@
-from typing import Any, Callable
-import re
+from typing import Any, Callable, Iterable
 from copy import deepcopy
 from itertools import chain
 from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
@@ -55,26 +54,16 @@ def _nested_get(source: dict, key: str, default: Any = None) -> Any:
     return res if res is not None else default
 
 
-def _nested_delete(source: dict, key: str) -> dict:
+def _nested_delete(source: dict, keys_to_drop: Iterable[str]) -> dict:
     """
-    Has same syntax as _nested_get, except returns the original source
-      with the requested key set to `None`
+    Returns the dictionary with the requested keys set to `None`
     """
     res = deepcopy(benedict(source))
-    keypaths = key.split("[*].", 1)
-    # Get up to the last key in keypath, then set that key to None
-    #  We set to None instead of popping to preserve indices
-    curr_keypath = keypath_util.parse_keys(keypaths[0], ".")
-    if len(keypaths) > 1:
-        res[curr_keypath] = [
-            _nested_delete(r, keypaths[1]) if isinstance(r, dict) else None
-            for r in res[curr_keypath]
-        ]
-    else:
-        # Case: value has an DROP object
+    for key in keys_to_drop:
+        curr_keypath = keypath_util.parse_keys(key, ".")
+        # Check if value has a DROP object
         v = res[curr_keypath]
         if isinstance(v, DROP):
-            assert v.value < 0
             curr_keypath = curr_keypath[: v.value]
         res[curr_keypath] = None
     return res

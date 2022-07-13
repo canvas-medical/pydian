@@ -1,8 +1,10 @@
 from collections.abc import Collection
-from typing import Any
+from typing import Any, TypeVar
+
+T = TypeVar("T", list, dict)
 
 
-def remove_empty_values(input: list | dict) -> list | dict:
+def remove_empty_values(input: T) -> T:
     """
     Removes empty inner lists/dicts.
     """

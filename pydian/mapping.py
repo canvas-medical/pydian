@@ -1,6 +1,4 @@
-from benedict import benedict
-from copy import deepcopy
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 from pydian.lib.util import remove_empty_values
 from pydian.dict import _nested_delete
 from pydian.lib.enums import DeleteRelativeObjectPlaceholder as DROP
@@ -9,7 +7,7 @@ from pydian.lib.enums import DeleteRelativeObjectPlaceholder as DROP
 class Mapper:
     def __init__(
         self,
-        map_fn: Callable[[Mapping], dict],
+        map_fn: Callable[[dict], dict],
         remove_empty: bool = False,
     ) -> None:
         """
@@ -20,17 +18,10 @@ class Mapper:
 
     def __call__(self, source: dict, **kwargs: Any) -> dict:
         res = self.map_fn(source, **kwargs)
-        if not isinstance(res, dict):
-            raise TypeError(
-                f"Expected {self.map_fn} output to return a dict, got type: {type(res)}"
-            )
 
         # Handle any DROP-flagged values
         keys_to_drop = self._get_keys_to_drop_set(res)
-
-        # Remove the keys to drop
-        for k in keys_to_drop:
-            res = _nested_delete(res, k)
+        res = _nested_delete(res, keys_to_drop)
 
         # Remove empty values
         if self.remove_empty:
