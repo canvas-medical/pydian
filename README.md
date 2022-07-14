@@ -6,7 +6,7 @@ With Pydian, you can specify your transforms within a single dictionary as follo
 ```python
 from pydian import Mapper, get
 
-# Some arbitrary source data
+# Some arbitrary source dict
 source = {
     'id': 'Abc123',
     'some': {
@@ -24,6 +24,7 @@ source = {
 }
 
 # A centralized mapping function -- specify your logic as data!
+#   This always takes at least a dict and returns a dict
 def mapping_fn(m: dict) -> dict:
     return {
         'static_value': 'Some static data',
@@ -35,17 +36,18 @@ def mapping_fn(m: dict) -> dict:
         }]
     }
 
-# A `Mapper` class that runs the provided function and some built-in post-processing features
+# A `Mapper` class that runs the provided function and some built-in post-processing features 
+#   (e.g. empty value removal)
 mapper = Mapper(mapping_fn)
 
-# A result that syntactically matches the mapping!
+# A result that syntactically matches the mapping function!
 assert mapper(source) == {
     'static_value': 'Some static data',
     'res_id': 'Abc123',
     'res_list': [{
         'uppercase_nested_val': 'HERE!',
         'unwrapped_list': [1, 2, 3],
-        'maybe_present_value?': None,
+        # get(m, 'somekey.nope.not.there') was None, so it was removed automatically from the result
     }],
 }
 ```
@@ -94,7 +96,7 @@ def mapping_fn(m: dict) -> dict:
         }
     }
 
-mapper = Mapper(mapping_fn)
+mapper = Mapper(mapping_fn, remove_empty=False)
 
 assert mapper(source) == {
     'obj': None

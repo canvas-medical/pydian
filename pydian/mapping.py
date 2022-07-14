@@ -12,7 +12,7 @@ class Mapper:
     def __init__(
         self,
         map_fn: Callable[Concatenate[dict[str, Any], P], dict[str, Any]],
-        remove_empty: bool = False,
+        remove_empty: bool = True,
     ) -> None:
         """
         Calls `map_fn` and then performs postprocessing into the final dict
