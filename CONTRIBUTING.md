@@ -8,7 +8,7 @@ Then at the top level dir: `pytest`, or `pytest --cov` to view code coverage
 ## Opening a PR
 Use this convention when creating a new branch: `{your_abbrv_name}/{issue#-contribution_description}`
 
-E.g. `epan/general_update` or `epan/1-fix_first_issue` if it's linked to an issue. 
+E.g. `yname/general_update` or `yname/1-fix_first_issue` if it's linked to an issue. 
 
 Thank you for contributing and working to keep things organized!
 

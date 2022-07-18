@@ -7,8 +7,7 @@ With Pydian, you can specify your transforms within a single dictionary as follo
 from pydian import Mapper, get
 
 # Some arbitrary source dict
-source = {
-    'id': 'Abc123',
+payload = {
     'some': {
         'deeply': {
             'nested': [{
@@ -23,16 +22,15 @@ source = {
     ]
 }
 
-# A centralized mapping function -- specify your logic as data!
+# A centralized mapping function -- specify your logic as data
 #   This always takes at least a dict and returns a dict
-def mapping_fn(m: dict) -> dict:
+def mapping_fn(source: dict) -> dict:
     return {
-        'static_value': 'Some static data',
-        'res_id': get(m, 'id'),
         'res_list': [{
-            'uppercase_nested_val': get(m, 'some.deeply.nested[0].value', apply=str.upper), # Get deeply nested values
-            'unwrapped_list': get(m, 'list_of_objects[*].val'), # Unwrap list structures with [*]
-            'maybe_present_value?': get(m, 'somekey.nope.not.there', apply=str.upper), # Null-check handling is built-in!
+            'static_value': 'Some static data',
+            'uppercase_nested_val': get(source, 'some.deeply.nested[0].value', apply=str.upper), # Get deeply nested values
+            'unwrapped_list': get(source, 'list_of_objects[*].val'), # Unwrap list structures with [*]
+            'maybe_present_value?': get(source, 'somekey.nope.not.there', apply=str.upper), # Null-check handling is built-in!
         }]
     }
 
@@ -41,10 +39,9 @@ def mapping_fn(m: dict) -> dict:
 mapper = Mapper(mapping_fn)
 
 # A result that syntactically matches the mapping function!
-assert mapper(source) == {
-    'static_value': 'Some static data',
-    'res_id': 'Abc123',
+assert mapper(payload) == {
     'res_list': [{
+        'static_value': 'Some static data',
         'uppercase_nested_val': 'HERE!',
         'unwrapped_list': [1, 2, 3],
         # get(m, 'somekey.nope.not.there') was None, so it was removed automatically from the result
@@ -58,7 +55,7 @@ See the [mapping test examples](./tests/test_mapping.py) for a more involved loo
 Pydian defines a special `get` function that provides a simple syntax for:
 - Getting nested items
     - Chain gets with `.`
-    - Index into lists
+    - Index into lists, e.g. `[0]`, `[-1]`
     - Unwrap a list of dicts with `[*]`
 - Chaining successful operations with `apply`
 - Specifying conditional dropping with `drop_level` (see [below](./README.md#conditional-dropping))
@@ -71,34 +68,33 @@ The `Mapper` framework provides a consistent way of abstracting mapping steps as
 2. [Conditional dropping](./README.md#conditional-dropping): Drop key(s)/object(s) if a specific value is `None`
 
 ### Null value removal
-This is just a parameter on the `Mapper` object, e.g.:
-```python
-mapper = Mapper(mapping_fn, remove_empty=True) # Defaults to False
-```
+This is just a parameter on the `Mapper` object (`remove_empty`) which defaults to `True`.
 
 An "empty" value is handled in [lib/util.py](./pydian/lib/util.py) and includes: `None`, `''`, `[]`, `{}`
+
 ### Conditional dropping
-This can be done during value evaluation in `get` which the `Mapper` object cleans-up:
+This can be done during value evaluation in `get` which the `Mapper` object cleans up:
 ```python
 from pydian import Mapper, get
 from pydian import DROP
 
-source = {
-    # `source_k` is missing!
+payload = {
+    'some': 'value'
+    # `source_key` is missing!
 }
 
-def mapping_fn(m: dict) -> dict:
+def mapping_fn(source: dict) -> dict:
     return {
         'obj': {
             # Specify in `get`, or as an if comprehension
-            'res_k': get(m, 'source_k', drop_level=DROP.THIS_OBJECT), # Sets the entire object to `None` if this is `None`
+            'res_k': get(source, 'source_key', drop_level=DROP.THIS_OBJECT), # Sets the entire object to `None` if this is `None`
             'other_k': 'Some value',
         }
     }
 
 mapper = Mapper(mapping_fn, remove_empty=False)
 
-assert mapper(source) == {
+assert mapper(payload) == {
     'obj': None
 }
 ```
