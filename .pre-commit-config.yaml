@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0  # this is optional, use `pre-commit autoupdate` to get the latest rev!
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: format-python-files
+        name: Format python files
+        entry: black .
+        files: ^.*.py$
+        language: python_venv
+      - id: sort-imports
+        name: Sort imports
+        entry: isort --profile black .
+        files: ^.*.py$
+        language: python_venv
+      - id: run-mypy-strict
+        name: Run mypy strict
+        entry: mypy --strict --ignore-missing-imports .
+        files: ^.*.py$
+        language: python_venv
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        additional_dependencies: ["flake8-bugbear", "flake8-quotes"]
+        args: ["--config=linter-configuration/flake8"]
+        language: python_venv
