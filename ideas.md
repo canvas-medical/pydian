@@ -129,3 +129,9 @@ source = {
 assert get(source, 'l[*].a,b') == [(1,2), (3,4)]
 ```
 ... then could also query and do more things on top of that
+
+## List Slicing
+
+E.g. `l[1:].a`, or `l[:-1].a`, or `l[1:-1].a,b`, etc.
+
+Don't add this until it's useful (discourage overly complex logic)

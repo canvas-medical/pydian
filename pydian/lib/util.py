@@ -6,7 +6,7 @@ T = TypeVar("T", list[Any], dict[str, Any])
 
 def remove_empty_values(input: T) -> T:
     """
-    Removes empty inner lists/dicts.
+    Recursively removes "empty" objects (`None` and/or objects only containing `None` values).
     """
     if isinstance(input, list):
         return [remove_empty_values(v) for v in input if has_content(v)]
@@ -17,7 +17,7 @@ def remove_empty_values(input: T) -> T:
 
 def has_content(obj: Any) -> bool:
     """
-    False if object is empty, and/or contains only empty items, otherwise True
+    Checks if the object has "content" (a non-`None` value), and/or contains at least one item with "content".
     """
     res = obj is not None
     if res and isinstance(obj, Collection):

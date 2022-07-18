@@ -15,6 +15,19 @@ def get(
     apply: Callable[[Any], Any] | None = None,
     drop_level: DROP | None = None,
 ) -> Any:
+    """
+    Gets a value from the source dictionary using a `.` syntax.
+    Handles None-checking (instead of raising error, returns default).
+
+    `key` notes:
+     - Use `.` to chain gets
+     - Index into lists, e.g. `[0]`, `[-1]`
+     - "Unwrap" a list of objects using `[*]`
+
+    Use `apply` to safely chain an operation on a successful get.
+
+    Use `drop_level` to specify conditional dropping if get results in None.
+    """
     res = _nested_get(source, key, default)
     if res and apply:
         try:
@@ -40,9 +53,6 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     If [*] is passed, then that means get into each object in the list. E.g. for a list l:
         l[*].a.b
       will return the following: [d['a']['b'] for d in l]
-
-    TODO: Add support for list slicing, e.g. [:1], [1:], [:-1], etc.
-    TODO: Add support for querying, maybe e.g. [?:key=1]
     """
     res = benedict(source)
     keypaths = key.split("[*].", 1)
@@ -50,8 +60,10 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
         res = res.get(keypaths[0][:-3])
     else:
         res = res.get(keypaths[0])
+    # Handle [*] case recursively
     if len(keypaths) > 1 and res is not None:
         res = [_nested_get(v, keypaths[1]) for v in res]
+    # Handle ending [*] case
     res = _handle_ending_star_unwrap(res, key)
     return res if res is not None else default
 
@@ -60,7 +72,9 @@ def _nested_delete(
     source: dict[str, Any], keys_to_drop: Iterable[str]
 ) -> dict[str, Any]:
     """
-    Returns the dictionary with the requested keys set to `None`
+    Returns the dictionary with the requested keys set to `None`.
+
+    DROP values are checked and handled here.
     """
     res = deepcopy(benedict(source))
     for key in keys_to_drop:
@@ -83,8 +97,14 @@ T = TypeVar("T")
 
 
 def _handle_ending_star_unwrap(res: T, key: str) -> T | list[Any]:
-    # HACK: Handle unwrapping if specified at the end
+    """
+    Handles case of [*] unwrap specified at the end
+
+    E.g. given: `a[*].b.c`    -> [[1, 2, 3], [4, 5, 6]]
+          then: `a[*].b.c[*]` -> [1, 2, 3, 4, 5, 6]
+
     # TODO: Find a nicer way to do this. Works for now...
+    """
     if (
         key.endswith("[*]")
         and isinstance(res, list)

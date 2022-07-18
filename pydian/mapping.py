@@ -14,13 +14,13 @@ class Mapper:
         map_fn: Callable[Concatenate[dict[str, Any], P], dict[str, Any]],
         remove_empty: bool = True,
     ) -> None:
-        """
-        Calls `map_fn` and then performs postprocessing into the final dict
-        """
         self.map_fn = map_fn
         self.remove_empty = remove_empty
 
     def __call__(self, source: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        """
+        Calls `map_fn` and then performs postprocessing into the result dict.
+        """
         res = self.map_fn(source, **kwargs)
 
         # Handle any DROP-flagged values
@@ -37,7 +37,7 @@ class Mapper:
         self, source: dict[str, Any], key_prefix: str = ""
     ) -> set[str]:
         """
-        Finds all keys where a DROP object is found
+        Recursively finds all keys where a DROP object is found.
         """
         res = set()
         for k, v in source.items():
