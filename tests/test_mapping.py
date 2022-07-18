@@ -161,5 +161,21 @@ def test_drop_out_of_bounds(simple_data: dict[str, Any]) -> None:
         }
 
     mapper = Mapper(mapping)
+    with pytest.raises(RuntimeError):
+        _ = mapper(source)
+
+
+def test_drop_exact_level(simple_data: dict[str, Any]) -> None:
+    source = simple_data
+
+    def mapping(m: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "parent": {
+                "CASE_has_parent_object": get(m, "notFoundKey", drop_level=DROP.PARENT)
+            },
+            "other_data": 123,
+        }
+
+    mapper = Mapper(mapping)
     res = mapper(source)
     assert res == {}

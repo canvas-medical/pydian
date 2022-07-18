@@ -68,10 +68,13 @@ def _nested_delete(
         # Check if value has a DROP object
         v = res[curr_keypath]
         if isinstance(v, DROP):
-            # If "out of bounds", return an empty dict
-            if -1 * v.value >= len(curr_keypath):
-                return dict()
+            # If "out of bounds", raise an error
+            if -1 * v.value > len(curr_keypath):
+                raise RuntimeError(f"Error: DROP level {v} at {key} is out-of-bounds")
             curr_keypath = curr_keypath[: v.value]
+            # Handle case for dropping entire object
+            if len(curr_keypath) == 0:
+                return dict()
         res[curr_keypath] = None
     return cast(dict[str, Any], res.dict())
 
