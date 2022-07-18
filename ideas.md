@@ -53,6 +53,20 @@ res = [
 Could see this being useful if multiple conditions are involved, though would need to
 make sure the logic is implemented correctly + consistently.
 
+### Exclude Syntax
+Query syntax, except `~` instead of `?`
+
+For both: `?_expression~_expression2`
+
+### Return Syntax
+Query on a specific set of values, but return a different one
+
+Maybe `-> _path_part_of_key_prefix_`
+
+E.g.: `get('a[*].b.code,system ? code="abc" & system="def" -> a[*].b')`
+
+Consider native Python things already available
+
 ## Validation Tool
 Similar to mapping language, have a validation language that is structurally similar to the output. 
 
@@ -100,3 +114,18 @@ is_valid_fhir_patient = Validator(v_map)
 
 mapper = Mapper(map_fn, validator=is_valid_fhir_patient)
 ```
+
+## Multiple get syntax (e.g. on unwrap)
+
+While iterating through a list, often we want to get multiple values. What if there was a syntax like:
+```python
+from pydian import get
+source = {
+    'l': [
+        {'a': 1, 'b': 2},
+        {'a': 3, 'a': 4}
+    ]
+}
+assert get(source, 'l[*].a,b') == [(1,2), (3,4)]
+```
+... then could also query and do more things on top of that
