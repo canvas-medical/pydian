@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 
 from pydian import get
-from pydian.dict import _nested_delete
+from pydian.dicts import _nested_delete
 
 
 @pytest.fixture

@@ -22,7 +22,7 @@ def get(
     `key` notes:
      - Use `.` to chain gets
      - Index into lists, e.g. `[0]`, `[-1]`
-     - "Unwrap" a list of objects using `[*]`
+     - Iterate through and "unwrap" a list using `[*]`
 
     Use `apply` to safely chain an operation on a successful get.
 
@@ -65,6 +65,9 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
         res = [_nested_get(v, keypaths[1]) for v in res]
     # Handle ending [*] case
     res = _handle_ending_star_unwrap(res, key)
+    # Cast back to a regular dict
+    if isinstance(res, benedict):
+        res = cast(dict[str, Any], res.dict())
     return res if res is not None else default
 
 

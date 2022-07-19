@@ -1,9 +1,9 @@
 from collections.abc import Callable
 from typing import Any, Concatenate, ParamSpec
 
-from pydian.dict import _nested_delete
-from pydian.lib.enums import DeleteRelativeObjectPlaceholder as DROP
-from pydian.lib.util import remove_empty_values
+from .dicts import _nested_delete
+from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
+from .lib.util import remove_empty_values
 
 P = ParamSpec("P")
 
