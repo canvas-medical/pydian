@@ -98,33 +98,30 @@ Would want to make sure performance is up to par (or at the very least isn't tha
 E.g.:
 ```python
 from pydian import Validator
-
+from pydian.lib.enums import Required, Between
 """
 Ideas for valid key-value pairs in the schema:
 {
     'key': 'primitive',
-    'key': 'primitive',
-    'key': ('primitive', int),
-    'key': ('primitive', int, int),
+    'key': Required('primitive'),
+    'key': Between(0, 1, 'primitive'),
     'key': type,
-    'key': (type, ),
-    'key': (type, int),
-    'key': (type, int, int),
-    'key': (type, callable),
-    'key': (type, callable, int),
-    'key': (type, callable, int, int),
+    'key': Required(type),
+    'key': Between(0, 1, type),
+    'key': Required(type, must_pass=Callable),
+    'key': Between(0, 1, type, must_pass=Callable),
 }
 """
 v_map = {
-    'resourceType': ('Patient', 1), # Exact str match, and required
+    'resourceType': Required('Patient'), # Exact str match, and required
     'name': [
         {
-            'family': (str, 1), # Is a str, and required if present
+            'family': Required(str), # Is a str, and required if present
             'given': [
-                (str, 1)
+                Between(1, 3, str)
             ],
-        } # Optional, since not wrapped in Tuple
-    ] # Any length, since not wrapped in Tuple
+        } # Optional, since not wrapped in Required or Between
+    ] # Any length
     # etc
 }
 
