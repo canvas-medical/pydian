@@ -1,3 +1,5 @@
+import re
+from collections import deque
 from copy import deepcopy
 from itertools import chain
 from typing import Any, Callable, Iterable, TypeVar, cast
@@ -28,7 +30,11 @@ def get(
 
     Use `drop_level` to specify conditional dropping if get results in None.
     """
-    res = _nested_get(source, key, default)
+    res = (
+        _nested_get(source, key, default)
+        if "." in key
+        else _single_get(source, key, default)
+    )
     if res and apply:
         try:
             res = apply(res)
@@ -38,6 +44,24 @@ def get(
             )
     if drop_level and res is None:
         res = drop_level
+    return res
+
+
+def _single_get(source: dict, key: str, default: Any = None) -> Any:
+    """
+    Gets single item, supports int indexing, e.g. `someKey[0]`
+    """
+    if idx := re.search(r"\[\d+\]", key):
+        idx_str = idx.group(0)
+        # Get the index as an int, e.g. "[0]" -> 0
+        i = int(idx_str[1:-1])
+        res = source.get(key.replace(idx_str, ""), [])
+        res = res[i] if i in range(len(res)) else None
+    elif key.endswith("[*]"):
+        res = source.get(key[:-3])
+        res = _handle_ending_star_unwrap(res, key)
+    else:
+        res = source.get(key, default)
     return res
 
 
@@ -54,23 +78,25 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
         l[*].a.b
       will return the following: [d['a']['b'] for d in l]
     """
-    if "." in key:
-        res = benedict(source)
-    else:
-        res = source
-    keypaths = key.split("[*].", 1)
-    if "[*]" in keypaths[0]:
-        res = res.get(keypaths[0][:-3])
-    else:
-        res = res.get(keypaths[0])
-    # Handle [*] case recursively
-    if len(keypaths) > 1 and res is not None:
-        res = [_nested_get(v, keypaths[1]) for v in res]
-    # Handle ending [*] case
+    if "." not in key:
+        return _single_get(source, key, default)
+    stack = deque(key.split("."))
+    res = source
+    while len(stack) > 0:
+        k = stack.popleft()
+        # If need to unwrap, then empty stack
+        if k.endswith("[*]"):
+            k = k[:-3]
+            remaining_key = ".".join(stack)
+            stack = []  # wipe stack for current run
+            res = res.get(k, [])
+            if remaining_key != "":
+                res = [_nested_get(v, remaining_key, []) for v in res]
+        else:
+            res = _single_get(res, k)
+        if res is None:
+            break
     res = _handle_ending_star_unwrap(res, key)
-    # Cast back to a regular dict
-    if isinstance(res, benedict):
-        res = cast(dict[str, Any], res.dict())
     return res if res is not None else default
 
 
