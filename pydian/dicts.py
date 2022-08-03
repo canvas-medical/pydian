@@ -30,11 +30,10 @@ def get(
 
     Use `drop_level` to specify conditional dropping if get results in None.
     """
-    res = (
-        _nested_get(source, key, default)
-        if "." in key
-        else _single_get(source, key, default)
-    )
+    if "." in key:
+        res = _nested_get(source, key, default)
+    else:
+        res = _single_get(source, key, default)
     if res and apply:
         try:
             res = apply(res)
@@ -108,7 +107,7 @@ def _nested_delete(
 
     DROP values are checked and handled here.
     """
-    res = deepcopy(benedict(source))
+    res = benedict(deepcopy(source))
     for key in keys_to_drop:
         curr_keypath = keypath_util.parse_keys(key, ".")
         # Check if value has a DROP object
