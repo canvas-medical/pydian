@@ -54,7 +54,10 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
         l[*].a.b
       will return the following: [d['a']['b'] for d in l]
     """
-    res = benedict(source)
+    if "." in key:
+        res = benedict(source)
+    else:
+        res = source
     keypaths = key.split("[*].", 1)
     if "[*]" in keypaths[0]:
         res = res.get(keypaths[0][:-3])
