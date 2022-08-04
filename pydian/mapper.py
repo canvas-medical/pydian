@@ -50,7 +50,7 @@ class Mapper:
                         indexed_keypath = f"{curr_key}[{i}]"
                         if isinstance(item, dict):
                             res |= self._get_keys_to_drop_set(item, indexed_keypath)
-                        elif isinstance(v, DROP):
+                        elif isinstance(item, DROP):
                             res.add(indexed_keypath)
                 case DROP() as v:
                     res.add(curr_key)

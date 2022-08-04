@@ -84,7 +84,8 @@ def test_drop(simple_data: dict[str, Any]) -> None:
                     "id": get(m, "data.patient.id", drop_level=DROP.THIS_OBJECT)
                 },
             },
-            "CASE_list": [
+            "CASE_list": [get(m, "notFoundKey", drop_level=DROP.THIS_OBJECT)],
+            "CASE_list_of_objects": [
                 {"a": get(m, "notFoundKey", drop_level=DROP.PARENT), "b": "someValue"},
                 {"a": "someValue", "b": "someValue"},
             ],
