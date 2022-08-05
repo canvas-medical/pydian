@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Any
 
 from pydian import get
@@ -12,8 +11,6 @@ def test_nested_delete(nested_data: dict[str, Any]) -> None:
         "data[2].patient.id",
         "data[3].patient.active",
     }
-
     res = _nested_delete(source, keys_to_drop)
     for k in keys_to_drop:
         assert get(res, k) is None
-        assert get(source, k) is not None

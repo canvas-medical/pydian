@@ -30,10 +30,7 @@ def get(
 
     Use `drop_level` to specify conditional dropping if get results in None.
     """
-    if "." in key:
-        res = _nested_get(source, key, default)
-    else:
-        res = _single_get(source, key, default)
+    res = _nested_get(source, key, default)
     if res and apply:
         try:
             res = apply(res)
@@ -50,18 +47,17 @@ def _single_get(source: dict, key: str, default: Any = None) -> Any:
     """
     Gets single item, supports int indexing, e.g. `someKey[0]`
     """
-    if idx := re.search(r"\[\d+\]", key):
-        idx_str = idx.group(0)
-        # Get the index as an int, e.g. "[0]" -> 0
-        i = int(idx_str[1:-1])
-        res = source.get(key.replace(idx_str, ""), [])
-        res = res[i] if i in range(len(res)) else None
-    elif key.endswith("[*]"):
-        res = source.get(key[:-3])
-        res = _handle_ending_star_unwrap(res, key)
-    else:
-        res = source.get(key, default)
-    return res
+    if match := re.fullmatch(r"(.*)\[(\d+|\*)\]$", key):
+        key_part = match.group(1)
+        index_part = match.group(2)
+        if index_part == "*":
+            return _handle_ending_star_unwrap(source.get(key_part), key)
+        values = source.get(key_part, [])
+        try:
+            return values[int(index_part)]
+        except IndexError:
+            return None
+    return source.get(key, default)
 
 
 def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -79,20 +75,19 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     """
     if "." not in key:
         return _single_get(source, key, default)
-    stack = deque(key.split("."))
+    queue = deque(key.split("."))
     res = source
-    while len(stack) > 0:
-        k = stack.popleft()
-        # If need to unwrap, then empty stack
-        if k.endswith("[*]"):
-            k = k[:-3]
-            remaining_key = ".".join(stack)
-            stack = []  # wipe stack for current run
-            res = res.get(k, [])
-            if remaining_key != "":
+    while len(queue) > 0:
+        key_part = queue.popleft()
+        # If need to unwrap, then empty queue
+        if key_part.endswith("[*]"):
+            res = res.get(key_part[:-3], [])
+            # Handle remaining queue items in the recursive call(s)
+            if remaining_key := ".".join(queue):
+                queue = []
                 res = [_nested_get(v, remaining_key, []) for v in res]
         else:
-            res = _single_get(res, k)
+            res = _single_get(res, key_part)
         if res is None:
             break
     res = _handle_ending_star_unwrap(res, key)
@@ -107,7 +102,7 @@ def _nested_delete(
 
     DROP values are checked and handled here.
     """
-    res = benedict(deepcopy(source))
+    res = benedict(source)
     for key in keys_to_drop:
         curr_keypath = keypath_util.parse_keys(key, ".")
         # Check if value has a DROP object

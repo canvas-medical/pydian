@@ -23,7 +23,7 @@ def has_content(obj: Any) -> bool:
     if res and isinstance(obj, Collection):
         res = len(obj) > 0
         # If has items, recursively check if those items have content.
-        # A case has content if at least one inner item has content.
+        #   A case has content if at least one inner item has content.
         if isinstance(obj, list):
             res = any(has_content(item) for item in obj)
         elif isinstance(obj, dict):
