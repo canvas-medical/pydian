@@ -51,7 +51,7 @@ def _single_get(source: dict, key: str, default: Any = None) -> Any:
         key_part = match.group(1)
         index_part = match.group(2)
         if index_part == "*":
-            return _handle_ending_star_unwrap(source.get(key_part), key)
+            return _handle_ending_star_unwrap(source.get(key_part))
         values = source.get(key_part, [])
         try:
             return values[int(index_part)]
@@ -84,13 +84,14 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             res = res.get(key_part[:-3], [])
             # Handle remaining queue items in the recursive call(s)
             if remaining_key := ".".join(queue):
-                queue = []
                 res = [_nested_get(v, remaining_key, []) for v in res]
+                queue.clear()
         else:
             res = _single_get(res, key_part)
-        if res is None:
-            break
-    res = _handle_ending_star_unwrap(res, key)
+            if res is None:
+                break
+    if key.endswith("[*]"):
+        res = _handle_ending_star_unwrap(res)
     return res if res is not None else default
 
 
@@ -122,7 +123,7 @@ def _nested_delete(
 T = TypeVar("T")
 
 
-def _handle_ending_star_unwrap(res: T, key: str) -> T | list[Any]:
+def _handle_ending_star_unwrap(res: T) -> T | list[Any]:
     """
     Handles case of [*] unwrap specified at the end
 
@@ -131,12 +132,7 @@ def _handle_ending_star_unwrap(res: T, key: str) -> T | list[Any]:
 
     # TODO: Find a nicer way to do this. Works for now...
     """
-    if (
-        key.endswith("[*]")
-        and isinstance(res, list)
-        and len(res) > 0
-        and isinstance(res[0], list)
-    ):
+    if isinstance(res, list) and len(res) > 0 and isinstance(res[0], list):
         new_res = [l for l in res if l is not None]
         return list(chain.from_iterable(new_res))
     return res
