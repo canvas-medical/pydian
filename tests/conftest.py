@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def simple_data() -> dict[str, Any]:
     return {
         "data": {"patient": {"id": "abc123", "active": True}},
@@ -14,7 +14,7 @@ def simple_data() -> dict[str, Any]:
     }
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def nested_data() -> dict[str, Any]:
     return {
         "data": [

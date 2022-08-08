@@ -25,7 +25,8 @@ class Mapper:
 
         # Handle any DROP-flagged values
         keys_to_drop = self._get_keys_to_drop_set(res)
-        res = _nested_delete(res, keys_to_drop)
+        if keys_to_drop:
+            res = _nested_delete(res, keys_to_drop)
 
         # Remove empty values
         if self.remove_empty:

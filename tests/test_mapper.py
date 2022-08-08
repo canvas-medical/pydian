@@ -54,6 +54,7 @@ def test_nested_get(nested_data: dict[str, Any]) -> None:
                 "single": get(m, "missing.key"),
                 "unwrap": get(m, "missing[*].key"),
                 "unwrap_twice": get(m, "missing[*].key[*].here"),
+                "overindex": get(m, "data[8888].patient"),
             },
         }
 
