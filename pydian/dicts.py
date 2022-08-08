@@ -30,7 +30,7 @@ def get(
 
     Use `drop_level` to specify conditional dropping if get results in None.
     """
-    res = _nested_get(source, key, default)
+    res = _nested_get(source, key.split("."), default)
     if res and apply:
         try:
             res = apply(res)
@@ -60,7 +60,9 @@ def _single_get(source: dict, key: str, default: Any = None) -> Any:
     return source.get(key, default)
 
 
-def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
+def _nested_get(
+    source: dict[str, Any], key_list: list[str], default: Any = None
+) -> Any:
     """
     Expects `.`-delimited string and tries to get the item in the dict.
 
@@ -73,9 +75,14 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
         l[*].a.b
       will return the following: [d['a']['b'] for d in l]
     """
-    if "." not in key:
-        return _single_get(source, key, default)
-    queue = deque(key.split("."))
+    # Handle base cases
+    match len(key_list):
+        case 0:
+            return None
+        case 1:
+            return _single_get(source, key_list[0], default)
+
+    queue = deque(key_list)
     res = source
     while len(queue) > 0:
         key_part = queue.popleft()
@@ -83,14 +90,14 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
         if key_part.endswith("[*]"):
             res = res.get(key_part[:-3], [])
             # Handle remaining queue items in the recursive call(s)
-            if remaining_key := ".".join(queue):
-                res = [_nested_get(v, remaining_key, []) for v in res]
+            if len(queue) > 0:
+                res = [_nested_get(v, list(queue), []) for v in res]
                 queue.clear()
         else:
             res = _single_get(res, key_part)
             if res is None:
                 break
-    if key.endswith("[*]"):
+    if key_list[-1].endswith("[*]"):
         res = _handle_ending_star_unwrap(res)
     return res if res is not None else default
 
