@@ -18,6 +18,7 @@ def test_get(simple_data: dict[str, Any]) -> None:
                 "first": get(m, "list_data[0].patient"),
                 "second": get(m, "list_data[1].patient"),
                 "out_of_bounds": get(m, "list_data[2].patient"),
+                "negative_index": get(m, "list_data[-1].patient"),
             },
         }
 
@@ -32,6 +33,7 @@ def test_get(simple_data: dict[str, Any]) -> None:
         "CASE_index_list": {
             "first": source["list_data"][0]["patient"],
             "second": source["list_data"][1]["patient"],
+            "negative_index": source["list_data"][-1]["patient"],
         },
     }
 

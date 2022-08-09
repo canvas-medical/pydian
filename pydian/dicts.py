@@ -1,6 +1,5 @@
 import re
 from collections import deque
-from copy import deepcopy
 from itertools import chain
 from typing import Any, Callable, Iterable, TypeVar, cast
 
@@ -47,7 +46,7 @@ def _single_get(source: dict, key: str, default: Any = None) -> Any:
     """
     Gets single item, supports int indexing, e.g. `someKey[0]`
     """
-    if match := re.fullmatch(r"(.*)\[(\d+|\*)\]$", key):
+    if match := re.fullmatch(r"(.*)\[(-?\d+|\*)\]$", key):
         key_part = match.group(1)
         index_part = match.group(2)
         if index_part == "*":
