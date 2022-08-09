@@ -133,12 +133,12 @@ def _handle_ending_star_unwrap(res: T) -> T | list[Any]:
     """
     Handles case of [*] unwrap specified at the end
 
-    E.g. given: `a[*].b.c`    -> [[1, 2, 3], [4, 5, 6]]
-          then: `a[*].b.c[*]` -> [1, 2, 3, 4, 5, 6]
-
-    # TODO: Find a nicer way to do this. Works for now...
+    E.g. given: `a[*].b.c`    -> [[1, 2, 3], [4, 5, 6], None, [7, 8, 9]]
+          then: `a[*].b.c[*]` -> [1, 2, 3, 4, 5, 6, 7, 8, 9]
     """
-    if isinstance(res, list) and len(res) > 0 and isinstance(res[0], list):
-        new_res = [l for l in res if l is not None]
-        return list(chain.from_iterable(new_res))
+    if isinstance(res, list):
+        if res_without_nones := [
+            l for l in res if (l is not None) and (isinstance(l, list))
+        ]:
+            return list(chain.from_iterable(res_without_nones))
     return res
