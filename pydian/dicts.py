@@ -42,7 +42,7 @@ def get(
     return res
 
 
-def _single_get(source: dict, key: str, default: Any = None) -> Any:
+def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     """
     Gets single item, supports int indexing, e.g. `someKey[0]`
     """
@@ -90,14 +90,14 @@ def _nested_get(
             res = res.get(key_part[:-3], [])
             # Handle remaining queue items in the recursive call(s)
             if len(queue) > 0:
-                res = [_nested_get(v, list(queue), []) for v in res]
+                res = [_nested_get(v, list(queue), []) for v in res]  # type: ignore
                 queue.clear()
         else:
             res = _single_get(res, key_part)
             if res is None:
                 break
     if key_list[-1].endswith("[*]"):
-        res = _handle_ending_star_unwrap(res)
+        res = _handle_ending_star_unwrap(res)  # type: ignore
     return res if res is not None else default
 
 

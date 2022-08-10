@@ -9,17 +9,16 @@ repos:
     hooks:
       - id: format-python-files
         name: Format python files
-        entry: black .
+        entry: black
         files: ^.*.py$
         language: python_venv
       - id: sort-imports
         name: Sort imports
-        entry: isort --profile black .
+        entry: isort --profile black
         files: ^.*.py$
         language: python_venv
-      # # TODO: Resolve the duplicate module error: https://github.com/python/mypy/issues/4008
-      # - id: run-mypy-strict
-      #   name: Run mypy strict
-      #   entry: mypy --strict --ignore-missing-imports .
-      #   files: ^.*.py$
-      #   language: python_venv
+      - id: run-mypy-strict
+        name: Run mypy strict
+        entry: mypy --strict --ignore-missing-imports
+        files: ^.*.py$
+        language: python_venv
