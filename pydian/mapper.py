@@ -34,9 +34,7 @@ class Mapper:
 
         return res
 
-    def _get_keys_to_drop_set(
-        self, source: dict[str, Any], key_prefix: str = ""
-    ) -> set[str]:
+    def _get_keys_to_drop_set(self, source: dict[str, Any], key_prefix: str = "") -> set[str]:
         """
         Recursively finds all keys where a DROP object is found.
         """

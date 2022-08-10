@@ -34,9 +34,7 @@ def get(
         try:
             res = apply(res)
         except Exception as e:
-            raise RuntimeError(
-                f"`apply` callable failed when getting key: {key}, error: {e}"
-            )
+            raise RuntimeError(f"`apply` callable failed when getting key: {key}, error: {e}")
     if drop_level and res is None:
         res = drop_level
     return res
@@ -59,9 +57,7 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     return source.get(key, default)
 
 
-def _nested_get(
-    source: dict[str, Any], key_list: list[str], default: Any = None
-) -> Any:
+def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None) -> Any:
     """
     Expects `.`-delimited string and tries to get the item in the dict.
 
@@ -101,9 +97,7 @@ def _nested_get(
     return res if res is not None else default
 
 
-def _nested_delete(
-    source: dict[str, Any], keys_to_drop: Iterable[str]
-) -> dict[str, Any]:
+def _nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
     """
     Returns the dictionary with the requested keys set to `None`.
 
@@ -137,8 +131,6 @@ def _handle_ending_star_unwrap(res: T) -> T | list[Any]:
           then: `a[*].b.c[*]` -> [1, 2, 3, 4, 5, 6, 7, 8, 9]
     """
     if isinstance(res, list):
-        if res_without_nones := [
-            l for l in res if (l is not None) and (isinstance(l, list))
-        ]:
+        if res_without_nones := [l for l in res if (l is not None) and (isinstance(l, list))]:
             return list(chain.from_iterable(res_without_nones))
     return res
