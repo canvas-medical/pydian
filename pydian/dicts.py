@@ -40,20 +40,24 @@ def get(
     return res
 
 
+REGEX_INDEX = re.compile(r"(.*)\[(-?\d+|\*)\]$")
+
+
 def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     """
     Gets single item, supports int indexing, e.g. `someKey[0]`
     """
-    if match := re.fullmatch(r"(.*)\[(-?\d+|\*)\]$", key):
-        key_part = match.group(1)
-        index_part = match.group(2)
-        if index_part == "*":
-            return _handle_ending_star_unwrap(source.get(key_part))
-        values = source.get(key_part, [])
-        try:
-            return values[int(index_part)]
-        except IndexError:
-            return None
+    if key.endswith("]"):
+        if match := REGEX_INDEX.fullmatch(key):
+            key_part = match.group(1)
+            index_part = match.group(2)
+            if index_part == "*":
+                return _handle_ending_star_unwrap(source.get(key_part))
+            values = source.get(key_part, [])
+            try:
+                return values[int(index_part)]
+            except IndexError:
+                return None
     return source.get(key, default)
 
 
