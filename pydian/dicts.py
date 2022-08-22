@@ -30,7 +30,7 @@ def get(
     Use `drop_level` to specify conditional dropping if get results in None.
     """
     res = _nested_get(source, key.split("."), default)
-    if res and apply:
+    if res is not None and apply:
         try:
             res = apply(res)
         except Exception as e:
