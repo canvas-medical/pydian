@@ -11,11 +11,12 @@ def take(n: int) -> Callable[[Sequence[Any]], list[Any]]:
     return partial(funcy.take, n)
 
 
-def map_fn(fn: Callable) -> Callable[[Iterable], Any]:
+def map_list(fn: Callable) -> Callable[[Iterable], Any]:
     """
-    Partial wrapper for `map`
+    Partial wrapper for `map`, then casts to a list
     """
-    return partial(map, fn)
+    _map_to_list = lambda func, it: list(map(func, it))
+    return partial(_map_to_list, fn)
 
 
 def str_replace(old: str, new: str) -> Callable[[str], str]:
