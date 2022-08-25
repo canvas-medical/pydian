@@ -1,5 +1,14 @@
 from functools import partial
-from typing import Callable
+from typing import Any, Callable, Sequence
+
+import funcy
+
+
+def take(n: int) -> Callable[[Sequence[Any]], list[Any]]:
+    """
+    Takes first n items from Sequence, returns as a list
+    """
+    return partial(funcy.take, n)
 
 
 def str_replace(old: str, new: str) -> Callable[[str], str]:
