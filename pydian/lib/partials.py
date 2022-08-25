@@ -12,7 +12,7 @@ def map_list(apply: Callable) -> Callable[[Iterable], Any]:
     """
     Partial wrapper for `map`, then casts to a list
     """
-    _map_to_list = lambda func, it: list(map(func, it))
+    _map_to_list: Callable = lambda func, it: list(map(func, it))
     return partial(_map_to_list, apply)
 
 
@@ -28,7 +28,7 @@ def str_replace(old: str, new: str) -> Callable[[str], str]:
     """
     Partial wrapper for `str.replace`
     """
-    _str_replace = lambda old, new, s: s.replace(old, new)
+    _str_replace: Callable = lambda old, new, s: s.replace(old, new)
     return partial(_str_replace, old, new)
 
 
