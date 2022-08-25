@@ -2,6 +2,7 @@ from typing import Any
 
 from pydian import Mapper, get
 from pydian.dicts import _nested_delete
+from pydian.lib.partials import str_replace
 
 
 def test_get(simple_data: dict[str, Any]) -> None:
@@ -82,3 +83,22 @@ def test_nested_delete(nested_data: dict[str, Any]) -> None:
     res = _nested_delete(source, keys_to_drop)
     for k in keys_to_drop:
         assert get(res, k) is None
+
+
+def test_get_apply(simple_data: dict[str, Any]) -> None:
+    source = simple_data
+    OLD_STR, NEW_STR = "456", "FourFiveSix"
+    single_apply = str.upper
+    chained_apply = [str.upper, str_replace(OLD_STR, NEW_STR)]
+    res = {
+        "single_apply": get(source, "data.patient.id", apply=single_apply),
+        "chained_apply": get(source, "list_data[0].patient.id", apply=chained_apply),
+        "not_found": get(source, "data.notFoundKey", apply=chained_apply),
+    }
+    assert res == {
+        "single_apply": str.upper(source["data"]["patient"]["id"]),
+        "chained_apply": (str.upper(source["list_data"][0]["patient"]["id"])).replace(
+            OLD_STR, NEW_STR
+        ),
+        "not_found": None,
+    }

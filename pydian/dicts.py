@@ -13,7 +13,7 @@ def get(
     source: dict[str, Any],
     key: str,
     default: Any = None,
-    apply: Callable[[Any], Any] | None = None,
+    apply: Callable[[Any], Any] | Iterable[Callable[[Any], Any]] | None = None,
     drop_level: DROP | None = None,
 ) -> Any:
     """
@@ -31,10 +31,13 @@ def get(
     """
     res = _nested_get(source, key.split("."), default)
     if res is not None and apply:
-        try:
-            res = apply(res)
-        except Exception as e:
-            raise RuntimeError(f"`apply` callable failed when getting key: {key}, error: {e}")
+        if not isinstance(apply, Iterable):
+            apply = (apply,)
+        for fn in apply:
+            try:
+                res = fn(res)
+            except Exception as e:
+                raise RuntimeError(f"`apply` call {fn} failed for value: {res} at key: {key}, {e}")
     if drop_level and res is None:
         res = drop_level
     return res
