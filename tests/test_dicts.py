@@ -1,7 +1,7 @@
 from typing import Any
 
+import pydian.partials as P
 from pydian import Mapper, get
-from pydian import partials as P
 from pydian.dicts import _nested_delete
 
 
