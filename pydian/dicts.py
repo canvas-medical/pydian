@@ -41,6 +41,8 @@ def get(
         if not isinstance(apply, Iterable):
             apply = (apply,)
         for fn in apply:
+            if res is None:
+                break
             try:
                 res = fn(res)
             except Exception as e:
