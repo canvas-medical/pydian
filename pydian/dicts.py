@@ -1,19 +1,23 @@
 import re
 from collections import deque
 from itertools import chain
-from typing import Any, Callable, Iterable, TypeVar, cast
+from typing import Any, Callable, Iterable, TypeAlias, TypeVar, cast
 
 from benedict import benedict
 from benedict.dicts.keypath import keypath_util
 
 from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
 
+ApplyFunc: TypeAlias = Callable[[Any], Any]
+ConditionalCheck: TypeAlias = Callable[[Any], bool]
+
 
 def get(
     source: dict[str, Any],
     key: str,
     default: Any = None,
-    apply: Callable[[Any], Any] | Iterable[Callable[[Any], Any]] | None = None,
+    apply: ApplyFunc | Iterable[ApplyFunc] | None = None,
+    only_if: ConditionalCheck | None = None,
     drop_level: DROP | None = None,
 ) -> Any:
     """
@@ -27,9 +31,15 @@ def get(
 
     Use `apply` to safely chain an operation on a successful get.
 
+    Use `only_if` to conditionally decide if the result should be kept + `apply`-ed.
+
     Use `drop_level` to specify conditional dropping if get results in None.
     """
     res = _nested_get(source, key.split("."), default)
+
+    if res is not None and callable(only_if):
+        res = res if only_if(res) else None
+
     if res is not None and apply:
         if not isinstance(apply, Iterable):
             apply = (apply,)

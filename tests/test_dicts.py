@@ -102,3 +102,12 @@ def test_get_apply(simple_data: dict[str, Any]) -> None:
         ),
         "not_found": None,
     }
+
+
+def test_get_only_if(simple_data: dict[str, Any]) -> None:
+    source = simple_data
+    KEY = "data.patient.id"
+    passes_check = get(source, KEY, only_if=lambda s: str.startswith(s, "abc"), apply=str.upper)
+    fails_check = get(source, KEY, only_if=lambda s: str.startswith(s, "000"), apply=str.upper)
+    assert passes_check == source["data"]["patient"]["id"].upper()
+    assert fails_check is None
