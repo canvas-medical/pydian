@@ -2,7 +2,7 @@ from typing import Any
 
 import pydian.partials as P
 from pydian import Mapper, get
-from pydian.dicts import _nested_delete
+from pydian.dicts import nested_delete
 
 
 def test_get(simple_data: dict[str, Any]) -> None:
@@ -80,7 +80,7 @@ def test_nested_delete(nested_data: dict[str, Any]) -> None:
         "data[2].patient.id",
         "data[3].patient.active",
     }
-    res = _nested_delete(source, keys_to_drop)
+    res = nested_delete(source, keys_to_drop)
     for k in keys_to_drop:
         assert get(res, k) is None
 
@@ -89,10 +89,12 @@ def test_get_apply(simple_data: dict[str, Any]) -> None:
     source = simple_data
     OLD_STR, NEW_STR = "456", "FourFiveSix"
     single_apply = str.upper
-    chained_apply = [str.upper, P.str_replace(OLD_STR, NEW_STR)]
+    chained_apply = [str.upper, P.replace_str(OLD_STR, NEW_STR)]
+    failed_chain_apply = [str.upper, lambda x: None, P.replace_str(OLD_STR, NEW_STR)]
     res = {
         "single_apply": get(source, "data.patient.id", apply=single_apply),
         "chained_apply": get(source, "list_data[0].patient.id", apply=chained_apply),
+        "failed_chained_apply": get(source, "list_data[0].patient.id", apply=failed_chain_apply),
         "not_found": get(source, "data.notFoundKey", apply=chained_apply),
     }
     assert res == {
@@ -100,6 +102,7 @@ def test_get_apply(simple_data: dict[str, Any]) -> None:
         "chained_apply": (str.upper(source["list_data"][0]["patient"]["id"])).replace(
             OLD_STR, NEW_STR
         ),
+        "failed_chained_apply": None,
         "not_found": None,
     }
 
