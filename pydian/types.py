@@ -1,7 +1,12 @@
 from enum import Enum
+from typing import Any, Callable, ParamSpec, TypeAlias
+
+ApplyFunc: TypeAlias = Callable[[Any], Any]
+ConditionalCheck: TypeAlias = Callable[[Any], bool]
+MappingFunc: TypeAlias = Callable[[dict[str, Any]], dict[str, Any]]
 
 
-class DeleteRelativeObjectPlaceholder(Enum):
+class DROP(Enum):
     """
     A DeleteRelativeObjectPlaceholder (abbrv. DROP) is a placeholder object
       that indicates the object relative to the current value should be

@@ -1,15 +1,12 @@
 import re
 from collections import deque
 from itertools import chain
-from typing import Any, Callable, Iterable, TypeAlias, TypeVar, cast
+from typing import Any, Iterable, TypeVar, cast
 
 from benedict import benedict
 from benedict.dicts.keypath import keypath_util
 
-from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
-
-ApplyFunc: TypeAlias = Callable[[Any], Any]
-ConditionalCheck: TypeAlias = Callable[[Any], bool]
+from pydian.types import DROP, ApplyFunc, ConditionalCheck
 
 
 def get(
@@ -48,6 +45,7 @@ def get(
                 res = fn(res)
             except Exception as e:
                 raise RuntimeError(f"`apply` call {fn} failed for value: {res} at key: {key}, {e}")
+
     if drop_level and res is None:
         res = drop_level
     return res
@@ -114,7 +112,7 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
     return res if res is not None else default
 
 
-def _nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
+def nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
     """
     Returns the dictionary with the requested keys set to `None`.
 
