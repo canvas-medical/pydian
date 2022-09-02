@@ -1,6 +1,18 @@
 from typing import Any
 
 import pytest
+import pandas as pd
+
+
+@pytest.fixture(scope="function")
+def simple_df() -> pd.DataFrame:
+    cols = ['First', 'Second', 'Third']
+    rows = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7 ,9]
+    ]
+    return pd.DataFrame(rows, columns=cols)
 
 
 @pytest.fixture(scope="function")
