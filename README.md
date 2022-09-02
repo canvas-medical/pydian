@@ -1,13 +1,15 @@
-# Pydian - pythonic data mapping
+# Pydian - pythonic data transforms
 
-Pydian is a pure Python library for repeatable and sharable data mapping. Pydian reduces boilerplate and provides a framework for expressively mapping data through Python `dict` objects and native list/dict comprehension.
+Pydian is a pure Python library for repeatable and sharable data transforms to promote data interoperability. Pydian reduces boilerplate and provides a framework for expressively mapping data through Python `dict` objects and native list/dict comprehensions.
+
+The goal of Pydian is to accelerate data interoperability and standardize data pre-processing by improving the developer "data wrangling" experience.
 
 With Pydian, you can specify your transforms within a single dictionary as follows:
 ```python
 from pydian import Mapper, get
 
 # Some arbitrary source dict
-payload = {
+some_payload = {
     'some': {
         'deeply': {
             'nested': [{
@@ -15,36 +17,35 @@ payload = {
             }]
         }
     },
-    'list_of_objects': [
+    'some_list_of_objects': [
         {'val': 1},
         {'val': 2},
         {'val': 3}
     ]
 }
 
-# A centralized mapping function -- specify your logic as data
-#   This always takes at least a dict and returns a dict
+# Centralize transforms  -- specify your logic like data
 def mapping_fn(source: dict) -> dict:
     return {
         'res_list': [{
             'static_value': 'Some static data',
-            'uppercase_nested_val': get(source, 'some.deeply.nested[0].value', apply=str.upper), # Get deeply nested values
-            'unwrapped_list': get(source, 'list_of_objects[*].val'), # Unwrap list structures with [*]
-            'maybe_present_value?': get(source, 'somekey.nope.not.there', apply=str.upper), # Null-check handling is built-in!
+            'uppercase_nested_val': get(source, 'some.deeply.nested[0].value', apply=str.upper), # friendly `.` syntax
+            'unwrapped_list': get(source, 'some_list_of_objects[*].val'), # `[*]` feature
+            'maybe_present_value?': get(source, 'somekey.that.is.not.there', apply=str.upper), # automatic null-checking
         }]
     }
 
-# A `Mapper` class that runs the provided function and some built-in post-processing features 
+# A `Mapper` class that runs the provided function and some built-in post-processing features
 #   (e.g. empty value removal)
 mapper = Mapper(mapping_fn)
 
 # A result that syntactically matches the mapping function!
-assert mapper(payload) == {
+assert mapper(some_payload) == {
     'res_list': [{
         'static_value': 'Some static data',
         'uppercase_nested_val': 'HERE!',
         'unwrapped_list': [1, 2, 3],
-        # get(m, 'somekey.nope.not.there') was None, so it was removed automatically from the result
+        # `Mapper` removes empty values for you!
     }],
 }
 ```
@@ -78,7 +79,7 @@ This can be done during value evaluation in `get` which the `Mapper` object clea
 from pydian import Mapper, get
 from pydian import DROP
 
-payload = {
+some_payload = {
     'some': 'value'
     # `source_key` is missing!
 }
@@ -94,7 +95,7 @@ def mapping_fn(source: dict) -> dict:
 
 mapper = Mapper(mapping_fn, remove_empty=False)
 
-assert mapper(payload) == {
+assert mapper(some_payload) == {
     'obj': None
 }
 ```
