@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydian"
-version = "0.1.3"
+version = "0.1.4"
 description = "Library for pythonic data mapping"
 authors = ["Eric Pan <eric.pan@canvasmedical.com>"]
 
