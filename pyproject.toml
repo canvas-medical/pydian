@@ -7,7 +7,6 @@ authors = ["Eric Pan <eric.pan@canvasmedical.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 python-benedict = "^0.25.1"
-funcy = "^1.17"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
