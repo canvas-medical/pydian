@@ -1,9 +1,9 @@
 from enum import Enum
-from typing import Any, Callable, ParamSpec, TypeAlias
+from typing import Any, Callable, TypeAlias
 
 ApplyFunc: TypeAlias = Callable[[Any], Any]
 ConditionalCheck: TypeAlias = Callable[[Any], bool]
-MappingFunc: TypeAlias = Callable[[dict[str, Any]], dict[str, Any]]
+MappingFunc: TypeAlias = Callable[..., dict[str, Any]]
 
 
 class DROP(Enum):

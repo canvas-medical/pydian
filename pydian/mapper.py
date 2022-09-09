@@ -18,7 +18,7 @@ class Mapper:
         """
         Calls `map_fn` and then performs postprocessing into the result dict.
         """
-        res = self.map_fn(source, **kwargs)  # type: ignore
+        res = self.map_fn(source, **kwargs)
 
         # Handle any DROP-flagged values
         keys_to_drop = self._get_keys_to_drop_set(res)
