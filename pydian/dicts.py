@@ -34,19 +34,19 @@ def get(
     """
     res = _nested_get(source, key.split("."), default)
 
-    if res is not None and callable(only_if):
+    if res is not None and only_if:
         res = res if only_if(res) else None
 
     if res is not None and apply:
         if not isinstance(apply, Iterable):
             apply = (apply,)
         for fn in apply:
-            if res is None:
-                break
             try:
                 res = fn(res)
             except Exception as e:
                 raise RuntimeError(f"`apply` call {fn} failed for value: {res} at key: {key}, {e}")
+            if res is None:
+                break
 
     if drop_level and res is None:
         res = drop_level

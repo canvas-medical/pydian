@@ -91,7 +91,7 @@ stdlib Wrappers
 """
 
 
-def map_then_list(apply: Callable) -> Callable[[Iterable], Any]:
+def map_then_list(apply: Callable) -> Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `map`, then casts to a list
     """
@@ -99,7 +99,7 @@ def map_then_list(apply: Callable) -> Callable[[Iterable], Any]:
     return partial(_map_to_list, apply)
 
 
-def filter_then_list(keep_filter: Callable) -> Callable[[Iterable], Any]:
+def filter_then_list(keep_filter: Callable) -> Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `filter`, then casts to a list
     """

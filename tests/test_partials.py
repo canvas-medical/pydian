@@ -26,7 +26,7 @@ def test_do() -> None:
     kwargs = {"second": 100}  # Passes in any order
     str_param_fn_1 = P.do(some_function, 100)  # Partially applies starting at second parameter
     str_param_fn_2 = P.do(some_function, **kwargs)
-    assert some_function("Ma", 100) == str_param_fn_1("Ma") == str_param_fn_2("Ma")  # type: ignore
+    assert some_function("Ma", 100) == str_param_fn_1("Ma") == str_param_fn_2("Ma")
 
 
 def test_other_generic_wrappers() -> None:
