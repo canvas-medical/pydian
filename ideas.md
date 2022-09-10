@@ -38,59 +38,11 @@ assert get(nested_source, 'l[*].(a.1.2,b.3.4)') == [(5, 6), (7, 8)]
 ... then could also query and do more things on top of that
 
 
-## Nicer `get` syntax for common chained operations
-
-E.g. Mapping from a dict
-
-Example:
-```python
-    "system": get(telecom_system_map, get(telecom, "system"), "other"),
-
-    ... vs.
-
-    "system": get(telecom, "system", apply=(telecom_system_map.get, {"default": "other"}))
-```
-
-So one idea: make `apply` accept a tuple to cast `partial` under the hood (taking args or kwargs). Otherwise can pass a partial directly
-
-
-## Query/Conditional Logic Syntax
-Query idea:
-```python
-res = get(d, 'someKey.innerKey?keyInList="someValue"')
-
-# vs.
-res = [
-    item
-    for item in get(d, 'someKey.innerKey', [])
-    if get(item, 'keyInList') == 'someValue'
-]
-```
-... really a list comprehension is good enough for now, though could be interesting for later.
-Could see this being useful if multiple conditions are involved, though would need to
-make sure the logic is implemented correctly + consistently.
-
-### Exclude Syntax
-Query syntax, except `~` instead of `?`
-
-For both: `?_expression~_expression2`
-
-### Return Syntax
-Query on a specific set of values, but return a different one
-
-Maybe `-> _path_part_of_key_prefix_`
-
-E.g.: `get('a[*].b.code,system ? code="abc" & system="def" -> a[*].b')`
-
-Consider native Python things already available
-
-
 ## List Slicing
 
 E.g. `l[1:].a`, or `l[:-1].a`, or `l[1:-1].a,b`, etc.
 
 Don't add this until it's useful (discourage overly complex logic)
-
 
 
 ## Database-like Support
