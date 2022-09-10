@@ -23,12 +23,10 @@ def test_do() -> None:
     def some_function(first: str, second: int) -> str:
         return f"Look {first}, I have an int {second}!"
 
-    args = ["Ma"]  # Passes in-order
     kwargs = {"second": 100}  # Passes in any order
-    no_param_fn = P.do(some_function, "Ma", 100)
-    int_param_fn = P.do(some_function, *args)
-    str_param_fn = P.do(some_function, **kwargs)
-    assert some_function("Ma", 100) == no_param_fn() == int_param_fn(100) == str_param_fn("Ma")  # type: ignore
+    str_param_fn_1 = P.do(some_function, 100)  # Partially applies starting at second parameter
+    str_param_fn_2 = P.do(some_function, **kwargs)
+    assert some_function("Ma", 100) == str_param_fn_1("Ma") == str_param_fn_2("Ma")  # type: ignore
 
 
 def test_other_generic_wrappers() -> None:

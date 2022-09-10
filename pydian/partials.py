@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Callable, Container, Iterable, Sequence
+from typing import Any, Callable, Container, Iterable
 
 import pydian
 from pydian.types import DROP, ApplyFunc, ConditionalCheck
@@ -36,9 +36,22 @@ Generic Wrappers
 
 def do(func: Callable, *args: Any, **kwargs: Any) -> Callable[[Any], Any]:
     """
-    Generic partial wrapper for functions
+    Generic partial wrapper for functions.
+
+    Starts at the second parameter when using *args (as opposed to the first).
     """
-    return partial(func, *args, **kwargs)
+    # To start partial application at second param, convert args -> kwargs based on index.
+    if not kwargs:
+        kwargs = {}
+    if args:
+        varnames = func.__code__.co_varnames
+        if len(args) >= len(varnames):
+            raise ValueError(
+                f"Received too many parameters to partial (expected at most {len(varnames) - 1}, got {len(args)})"
+            )
+        varnames_to_map = varnames[1:]
+        kwargs.update({varnames_to_map[i]: args[i] for i in range(len(args))})
+    return partial(func, **kwargs)
 
 
 def equals(value: Any) -> Callable[[Any], bool]:
