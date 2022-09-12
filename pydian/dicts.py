@@ -1,19 +1,20 @@
 import re
 from collections import deque
 from itertools import chain
-from typing import Any, Callable, Iterable, TypeVar, cast
+from typing import Any, Iterable, TypeVar, cast
 
 from benedict import benedict
 from benedict.dicts.keypath import keypath_util
 
-from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
+from pydian.types import DROP, ApplyFunc, ConditionalCheck
 
 
 def get(
     source: dict[str, Any],
     key: str,
     default: Any = None,
-    apply: Callable[[Any], Any] | None = None,
+    apply: ApplyFunc | Iterable[ApplyFunc] | None = None,
+    only_if: ConditionalCheck | None = None,
     drop_level: DROP | None = None,
 ) -> Any:
     """
@@ -27,14 +28,26 @@ def get(
 
     Use `apply` to safely chain an operation on a successful get.
 
+    Use `only_if` to conditionally decide if the result should be kept + `apply`-ed.
+
     Use `drop_level` to specify conditional dropping if get results in None.
     """
     res = _nested_get(source, key.split("."), default)
+
+    if res is not None and only_if:
+        res = res if only_if(res) else None
+
     if res is not None and apply:
-        try:
-            res = apply(res)
-        except Exception as e:
-            raise RuntimeError(f"`apply` callable failed when getting key: {key}, error: {e}")
+        if not isinstance(apply, Iterable):
+            apply = (apply,)
+        for fn in apply:
+            try:
+                res = fn(res)
+            except Exception as e:
+                raise RuntimeError(f"`apply` call {fn} failed for value: {res} at key: {key}, {e}")
+            if res is None:
+                break
+
     if drop_level and res is None:
         res = drop_level
     return res
@@ -101,7 +114,7 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
     return res if res is not None else default
 
 
-def _nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
+def nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
     """
     Returns the dictionary with the requested keys set to `None`.
 

@@ -1,17 +1,14 @@
-from collections.abc import Callable
-from typing import Any, Concatenate, ParamSpec
+from typing import Any
 
-from .dicts import _nested_delete
-from .lib.enums import DeleteRelativeObjectPlaceholder as DROP
+from .dicts import nested_delete
 from .lib.util import remove_empty_values
-
-P = ParamSpec("P")
+from .types import DROP, MappingFunc
 
 
 class Mapper:
     def __init__(
         self,
-        map_fn: Callable[Concatenate[dict[str, Any], P], dict[str, Any]],
+        map_fn: MappingFunc,
         remove_empty: bool = True,
     ) -> None:
         self.map_fn = map_fn
@@ -26,7 +23,7 @@ class Mapper:
         # Handle any DROP-flagged values
         keys_to_drop = self._get_keys_to_drop_set(res)
         if keys_to_drop:
-            res = _nested_delete(res, keys_to_drop)
+            res = nested_delete(res, keys_to_drop)
 
         # Remove empty values
         if self.remove_empty:

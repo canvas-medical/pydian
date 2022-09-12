@@ -17,8 +17,8 @@ repos:
         entry: isort --profile black
         files: ^.*.py$
         language: python_venv
-      - id: run-mypy-strict
-        name: Run mypy strict
-        entry: mypy --strict --ignore-missing-imports
+      - id: run-mypy
+        name: Run mypy
+        entry: mypy --ignore-missing-imports
         files: ^.*.py$
         language: python_venv
