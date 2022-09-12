@@ -29,7 +29,7 @@ def test_do() -> None:
     assert some_function("Ma", 100) == str_param_fn_1("Ma") == str_param_fn_2("Ma")
 
 
-def test_other_generic_wrappers() -> None:
+def test_generic_wrappers() -> None:
     value = {"a": "b", "c": "d"}
     copied_value = deepcopy(value)
     example_key = "a"
@@ -39,12 +39,17 @@ def test_other_generic_wrappers() -> None:
     assert P.not_equivalent(copied_value)(value) == (value is not copied_value)
     assert P.contained_in(copied_value)(example_key) == (example_key in value)
     assert P.not_contained_in(copied_value)(example_key) == (example_key not in value)
-    assert P.keep(1)(copied_value) == list(iter(copied_value))[:1]
-    assert P.keep(50)(copied_value) == list(iter(copied_value))[:50]
-    assert P.index(-1)(copied_value) == list(iter(copied_value))[-1]
 
-    # Assert no mutations
-    assert value == copied_value
+
+def test_iterable_wrappers() -> None:
+    value = [1, 2, 3, 4, 5]
+
+    assert P.keep(1)(value) == list(iter(value))[:1]
+    assert P.keep(50)(value) == list(iter(value))[:50]
+    assert P.index(0)(value) == tuple(iter(value))[0]
+    assert P.index(1)(value) == tuple(iter(value))[1]
+    assert P.index(-1)(value) == tuple(iter(value))[-1]
+    assert P.index(-3)(value) == tuple(iter(value))[-3]
 
 
 def test_stdlib_wrappers() -> None:

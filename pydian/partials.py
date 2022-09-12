@@ -1,5 +1,6 @@
 from functools import partial
-from typing import Any, Callable, Container, Iterable
+from itertools import islice
+from typing import Any, Callable, Container, Iterable, Reversible
 
 import pydian
 from pydian.types import DROP, ApplyFunc, ConditionalCheck
@@ -79,11 +80,19 @@ def not_contained_in(container: Container) -> Callable[[Any], bool]:
 
 
 def keep(n: int) -> Callable[[Iterable], list[Any]]:
-    return lambda it: list(iter(it))[:n]
+    return lambda it: list(islice(it, n))
 
 
-def index(i: int) -> Callable[[Iterable], Any]:
-    return lambda it: list(iter(it))[i] if len(list(iter(it))) > 0 else None
+def index(idx: int) -> Callable[[Reversible], Any]:
+    def get_index(obj: Reversible, i: int) -> Any:
+        if i >= 0:
+            it = iter(obj)
+        else:
+            i = (i + 1) * -1
+            it = reversed(obj)
+        return next(islice(it, i, i + 1), None)
+
+    return partial(get_index, i=idx)
 
 
 """
