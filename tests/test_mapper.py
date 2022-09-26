@@ -56,3 +56,23 @@ def test_drop_exact_level(simple_data: dict[str, Any]) -> None:
     mapper = Mapper(mapping)
     res = mapper(source)
     assert res == {}
+
+
+def test_drop_repeat() -> None:
+    source = {}
+
+    def mapping(_: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "dropped_direct": [DROP.THIS_OBJECT, DROP.THIS_OBJECT],
+            "also_dropped": [{"parent_key": DROP.PARENT}, DROP.THIS_OBJECT],
+            "partially_dropped": [
+                "first_kept",
+                {"second_dropped": DROP.THIS_OBJECT},
+                "third_kept",
+                {"fourth_dropped": DROP.THIS_OBJECT},
+            ],
+        }
+
+    mapper = Mapper(mapping)
+    res = mapper(source)
+    assert res == {"partially_dropped": ["first_kept", "third_kept"]}

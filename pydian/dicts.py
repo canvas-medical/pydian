@@ -118,22 +118,30 @@ def nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[s
     """
     Returns the dictionary with the requested keys set to `None`.
 
+    If a key is a duplicate lookup fails, that key is skipped.
+
     DROP values are checked and handled here.
     """
     res = benedict(source)
+    seen_keys = set()
     for key in keys_to_drop:
-        curr_keypath = keypath_util.parse_keys(key, ".")
-        # Check if value has a DROP object
-        v = res[curr_keypath]
-        if isinstance(v, DROP):
-            # If "out of bounds", raise an error
-            if -1 * v.value > len(curr_keypath):
-                raise RuntimeError(f"Error: DROP level {v} at {key} is out-of-bounds")
-            curr_keypath = curr_keypath[: v.value]
-            # Handle case for dropping entire object
-            if len(curr_keypath) == 0:
-                return dict()
-        res[curr_keypath] = None
+        if key not in seen_keys:
+            curr_keypath = keypath_util.parse_keys(key, ".")
+            # Check if value has a DROP object
+            try:
+                v = res[curr_keypath]
+            except:
+                seen_keys.add(key)
+                continue
+            if isinstance(v, DROP):
+                # If "out of bounds", raise an error
+                if -1 * v.value > len(curr_keypath):
+                    raise RuntimeError(f"Error: DROP level {v} at {key} is out-of-bounds")
+                curr_keypath = curr_keypath[: v.value]
+                # Handle case for dropping entire object
+                if len(curr_keypath) == 0:
+                    return dict()
+            res[curr_keypath] = None
     return cast(dict[str, Any], res.dict())
 
 
