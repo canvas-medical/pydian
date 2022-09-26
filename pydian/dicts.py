@@ -70,7 +70,7 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             try:
                 return values[int(index_part)]
             except IndexError:
-                return None
+                return default
     return source.get(key, default)
 
 
