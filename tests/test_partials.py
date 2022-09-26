@@ -44,12 +44,12 @@ def test_generic_wrappers() -> None:
 def test_iterable_wrappers() -> None:
     value = [1, 2, 3, 4, 5]
 
-    assert P.keep(1)(value) == list(iter(value))[:1]
-    assert P.keep(50)(value) == list(iter(value))[:50]
-    assert P.index(0)(value) == tuple(iter(value))[0]
-    assert P.index(1)(value) == tuple(iter(value))[1]
-    assert P.index(-1)(value) == tuple(iter(value))[-1]
-    assert P.index(-3)(value) == tuple(iter(value))[-3]
+    assert P.keep(1)(value) == value[:1]
+    assert P.keep(50)(value) == value[:50]
+    assert P.index(0)(value) == value[0]
+    assert P.index(1)(value) == value[1]
+    assert P.index(-1)(value) == value[-1]
+    assert P.index(-3)(value) == value[-3]
 
 
 def test_stdlib_wrappers() -> None:
