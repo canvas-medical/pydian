@@ -33,11 +33,7 @@ def test_drop_out_of_bounds() -> None:
     source = {}
 
     def mapping(m: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "parent": {
-                "CASE_no_grandparent": DROP.GREATGRANDPARENT
-            }
-        }
+        return {"parent": {"CASE_no_grandparent": DROP.GREATGRANDPARENT}}
 
     mapper = Mapper(mapping)
     with pytest.raises(RuntimeError):

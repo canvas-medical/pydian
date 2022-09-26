@@ -1,10 +1,7 @@
 import re
 from collections import deque
 from itertools import chain
-from typing import Any, Iterable, TypeVar, cast
-
-from benedict import benedict
-from benedict.dicts.keypath import keypath_util
+from typing import Any, Iterable, TypeVar
 
 from pydian.types import DROP, ApplyFunc, ConditionalCheck
 
@@ -69,7 +66,7 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             values = source.get(key_part, [])
             try:
                 return values[int(index_part)]
-            except IndexError:
+            except:
                 return default
     return source.get(key, default)
 
@@ -114,6 +111,33 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
     return res if res is not None else default
 
 
+def _nested_set(
+    source: dict[str, Any], tokenized_key_list: list[str | int], target: Any
+) -> dict[str, Any] | None:
+    """
+    Returns a copy of source with the replace if successful, else None.
+    """
+    res = source
+    try:
+        for k in tokenized_key_list[:-1]:
+            res = res[k]
+        res[tokenized_key_list[-1]] = target
+    except:
+        return None
+    return source
+
+
+def _get_tokenized_keypath(key: str) -> list[str, int]:
+    """
+    Returns a keypath with str and ints separated.
+
+    E.g.: "a[0].b[-1].c" -> ["a", 0, "b", -1, "c"]
+    """
+    tokenized_key = key.replace("[", ".").replace("]", "")
+    keypath = tokenized_key.split(".")
+    return [int(k) if str.isnumeric(k.replace("-", "")) else k for k in keypath]
+
+
 def nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
     """
     Returns the dictionary with the requested keys set to `None`.
@@ -122,27 +146,27 @@ def nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[s
 
     DROP values are checked and handled here.
     """
-    res = benedict(source)
+    res = source
     seen_keys = set()
     for key in keys_to_drop:
         if key not in seen_keys:
-            curr_keypath = keypath_util.parse_keys(key, ".")
-            # Check if value has a DROP object
-            try:
-                v = res[curr_keypath]
-            except:
+            if v := _nested_get(res, key.split(".")):
+                curr_keypath = _get_tokenized_keypath(key)
+                # Check if value has a DROP object
+                if isinstance(v, DROP):
+                    # If "out of bounds", raise an error
+                    if -1 * v.value > len(curr_keypath):
+                        raise RuntimeError(f"Error: DROP level {v} at {key} is out-of-bounds")
+                    curr_keypath = curr_keypath[: v.value]
+                    # Handle case for dropping entire object
+                    if len(curr_keypath) == 0:
+                        return dict()
+                if updated := _nested_set(res, curr_keypath, None):
+                    res = updated
+            else:
                 seen_keys.add(key)
                 continue
-            if isinstance(v, DROP):
-                # If "out of bounds", raise an error
-                if -1 * v.value > len(curr_keypath):
-                    raise RuntimeError(f"Error: DROP level {v} at {key} is out-of-bounds")
-                curr_keypath = curr_keypath[: v.value]
-                # Handle case for dropping entire object
-                if len(curr_keypath) == 0:
-                    return dict()
-            res[curr_keypath] = None
-    return cast(dict[str, Any], res.dict())
+    return res
 
 
 T = TypeVar("T")
