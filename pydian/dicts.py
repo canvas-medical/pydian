@@ -163,9 +163,9 @@ def nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[s
                         return dict()
                 if updated := _nested_set(res, curr_keypath, None):
                     res = updated
-            else:
-                seen_keys.add(key)
-                continue
+                seen_keys.add(".".join([str(kp) for kp in curr_keypath]))
+        else:
+            seen_keys.add(key)
     return res
 
 
