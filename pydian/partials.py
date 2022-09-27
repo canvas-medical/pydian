@@ -55,28 +55,20 @@ def do(func: Callable, *args: Any, **kwargs: Any) -> Callable[[Any], Any]:
     return partial(func, **kwargs)
 
 
-def equals(value: Any) -> Callable[[Any], bool]:
-    return lambda v: v == value
+def add(value: Any) -> Callable[[Any], Any]:
+    return lambda v: v + value
 
 
-def equivalent(value: Any) -> Callable[[Any], bool]:
-    return lambda v: v is value
+def subtract(value: Any) -> Callable[[Any], Any]:
+    return lambda v: v - value
 
 
-def contained_in(container: Container) -> Callable[[Any], bool]:
-    return lambda v: v in container
+def multiply(value: Any) -> Callable[[Any], Any]:
+    return lambda v: v * value
 
 
-def not_equal(value: Any) -> Callable[[Any], bool]:
-    return lambda v: v != value
-
-
-def not_equivalent(value: Any) -> Callable[[Any], bool]:
-    return lambda v: v is not value
-
-
-def not_contained_in(container: Container) -> Callable[[Any], bool]:
-    return lambda v: v not in container
+def divide(value: Any) -> Callable[[Any], Any]:
+    return lambda v: v / value
 
 
 def keep(n: int) -> Callable[[Iterable], list[Any]]:
@@ -93,6 +85,54 @@ def index(idx: int) -> Callable[[Reversible], Any]:
         return next(islice(it, i, i + 1), None)
 
     return partial(get_index, i=idx)
+
+
+def equals(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v == value
+
+
+def gt(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v > value
+
+
+def lt(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v < value
+
+
+def gte(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v >= value
+
+
+def lte(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v <= value
+
+
+def equivalent(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v is value
+
+
+def contains(value: Any) -> Callable[[Any], bool]:
+    return lambda container: value in container
+
+
+def contained_in(container: Container) -> Callable[[Any], bool]:
+    return lambda v: v in container
+
+
+def not_equal(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v != value
+
+
+def not_equivalent(value: Any) -> Callable[[Any], bool]:
+    return lambda v: v is not value
+
+
+def not_contains(value: Any) -> Callable[[Any], bool]:
+    return lambda container: value not in container
+
+
+def not_contained_in(container: Container) -> Callable[[Any], bool]:
+    return lambda v: v not in container
 
 
 """
