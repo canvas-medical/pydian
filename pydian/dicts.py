@@ -138,7 +138,7 @@ def _get_tokenized_keypath(key: str) -> list[str, int]:
     return [int(k) if str.isnumeric(k.replace("-", "")) else k for k in keypath]
 
 
-def nested_delete(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
+def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
     """
     Returns the dictionary with the requested keys set to `None`.
 
