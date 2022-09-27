@@ -120,14 +120,14 @@ def _nested_set(
     res = source
     try:
         for k in tokenized_key_list[:-1]:
-            res = res[k]
-        res[tokenized_key_list[-1]] = target
+            res = res[k]  # type: ignore
+        res[tokenized_key_list[-1]] = target  # type: ignore
     except:
         return None
     return source
 
 
-def _get_tokenized_keypath(key: str) -> list[str, int]:
+def _get_tokenized_keypath(key: str) -> list[str | int]:
     """
     Returns a keypath with str and ints separated.
 

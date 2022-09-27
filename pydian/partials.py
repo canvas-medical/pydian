@@ -35,7 +35,7 @@ Generic Wrappers
 """
 
 
-def do(func: Callable, *args: Any, **kwargs: Any) -> Callable[[Any], Any]:
+def do(func: Callable, *args: Any, **kwargs: Any) -> ApplyFunc:
     """
     Generic partial wrapper for functions.
 
@@ -55,27 +55,27 @@ def do(func: Callable, *args: Any, **kwargs: Any) -> Callable[[Any], Any]:
     return partial(func, **kwargs)
 
 
-def add(value: Any) -> Callable[[Any], Any]:
+def add(value: Any) -> ApplyFunc:
     return lambda v: v + value
 
 
-def subtract(value: Any) -> Callable[[Any], Any]:
+def subtract(value: Any) -> ApplyFunc:
     return lambda v: v - value
 
 
-def multiply(value: Any) -> Callable[[Any], Any]:
+def multiply(value: Any) -> ApplyFunc:
     return lambda v: v * value
 
 
-def divide(value: Any) -> Callable[[Any], Any]:
+def divide(value: Any) -> ApplyFunc:
     return lambda v: v / value
 
 
-def keep(n: int) -> Callable[[Iterable], list[Any]]:
+def keep(n: int) -> ApplyFunc | Callable[[Iterable], list[Any]]:
     return lambda it: list(islice(it, n))
 
 
-def index(idx: int) -> Callable[[Reversible], Any]:
+def index(idx: int) -> ApplyFunc | Callable[[Reversible], Any]:
     def get_index(obj: Reversible, i: int) -> Any:
         if i >= 0:
             it = iter(obj)
@@ -87,51 +87,51 @@ def index(idx: int) -> Callable[[Reversible], Any]:
     return partial(get_index, i=idx)
 
 
-def equals(value: Any) -> Callable[[Any], bool]:
+def equals(value: Any) -> ConditionalCheck:
     return lambda v: v == value
 
 
-def gt(value: Any) -> Callable[[Any], bool]:
+def gt(value: Any) -> ConditionalCheck:
     return lambda v: v > value
 
 
-def lt(value: Any) -> Callable[[Any], bool]:
+def lt(value: Any) -> ConditionalCheck:
     return lambda v: v < value
 
 
-def gte(value: Any) -> Callable[[Any], bool]:
+def gte(value: Any) -> ConditionalCheck:
     return lambda v: v >= value
 
 
-def lte(value: Any) -> Callable[[Any], bool]:
+def lte(value: Any) -> ConditionalCheck:
     return lambda v: v <= value
 
 
-def equivalent(value: Any) -> Callable[[Any], bool]:
+def equivalent(value: Any) -> ConditionalCheck:
     return lambda v: v is value
 
 
-def contains(value: Any) -> Callable[[Any], bool]:
+def contains(value: Any) -> ConditionalCheck:
     return lambda container: value in container
 
 
-def contained_in(container: Container) -> Callable[[Any], bool]:
+def contained_in(container: Container) -> ConditionalCheck:
     return lambda v: v in container
 
 
-def not_equal(value: Any) -> Callable[[Any], bool]:
+def not_equal(value: Any) -> ConditionalCheck:
     return lambda v: v != value
 
 
-def not_equivalent(value: Any) -> Callable[[Any], bool]:
+def not_equivalent(value: Any) -> ConditionalCheck:
     return lambda v: v is not value
 
 
-def not_contains(value: Any) -> Callable[[Any], bool]:
+def not_contains(value: Any) -> ConditionalCheck:
     return lambda container: value not in container
 
 
-def not_contained_in(container: Container) -> Callable[[Any], bool]:
+def not_contained_in(container: Container) -> ConditionalCheck:
     return lambda v: v not in container
 
 
@@ -140,7 +140,7 @@ stdlib Wrappers
 """
 
 
-def map_then_list(apply: Callable) -> Callable[[Iterable], list[Any]]:
+def map_then_list(apply: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `map`, then casts to a list
     """
@@ -148,7 +148,7 @@ def map_then_list(apply: Callable) -> Callable[[Iterable], list[Any]]:
     return partial(_map_to_list, apply)
 
 
-def filter_then_list(keep_filter: Callable) -> Callable[[Iterable], list[Any]]:
+def filter_then_list(keep_filter: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `filter`, then casts to a list
     """
@@ -156,7 +156,7 @@ def filter_then_list(keep_filter: Callable) -> Callable[[Iterable], list[Any]]:
     return partial(_filter_to_list, keep_filter)
 
 
-def replace_str(old: str, new: str) -> Callable[[str], str]:
+def replace_str(old: str, new: str) -> ApplyFunc | Callable[[str], str]:
     """
     Partial wrapper for `str.replace`
     """
@@ -164,7 +164,7 @@ def replace_str(old: str, new: str) -> Callable[[str], str]:
     return partial(_str_replace, old, new)
 
 
-def str_startswith(prefix: str) -> Callable[[str], bool]:
+def str_startswith(prefix: str) -> ApplyFunc | Callable[[str], bool]:
     """
     Partial wrapper for `str.startswith`
     """
@@ -172,7 +172,7 @@ def str_startswith(prefix: str) -> Callable[[str], bool]:
     return partial(_str_startswith, pre=prefix)
 
 
-def str_endswith(suffix: str) -> Callable[[str], bool]:
+def str_endswith(suffix: str) -> ApplyFunc | Callable[[str], bool]:
     """
     Partial wrapper for `str.endswith`
     """
