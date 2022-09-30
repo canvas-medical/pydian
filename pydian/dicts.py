@@ -1,7 +1,7 @@
 import re
 from collections import deque
 from itertools import chain
-from typing import Any, Iterable, TypeVar
+from typing import Any, Iterable, Sequence, TypeVar
 
 from pydian.types import DROP, ApplyFunc, ConditionalCheck
 
@@ -66,7 +66,9 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             values = source.get(key_part, [])
             try:
                 return values[int(index_part)]
-            except:
+            except IndexError:
+                return default
+            except TypeError:
                 return default
     return source.get(key, default)
 
@@ -112,7 +114,7 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
 
 
 def _nested_set(
-    source: dict[str, Any], tokenized_key_list: list[str | int], target: Any
+    source: dict[str, Any], tokenized_key_list: Sequence[str | int], target: Any
 ) -> dict[str, Any] | None:
     """
     Returns a copy of source with the replace if successful, else None.
@@ -122,12 +124,16 @@ def _nested_set(
         for k in tokenized_key_list[:-1]:
             res = res[k]  # type: ignore
         res[tokenized_key_list[-1]] = target  # type: ignore
-    except:
+    except KeyError:
+        return None
+    except IndexError:
+        return None
+    except TypeError:
         return None
     return source
 
 
-def _get_tokenized_keypath(key: str) -> list[str | int]:
+def _get_tokenized_keypath(key: str) -> tuple[str | int]:
     """
     Returns a keypath with str and ints separated.
 
@@ -135,7 +141,7 @@ def _get_tokenized_keypath(key: str) -> list[str | int]:
     """
     tokenized_key = key.replace("[", ".").replace("]", "")
     keypath = tokenized_key.split(".")
-    return [int(k) if str.isnumeric(k.replace("-", "")) else k for k in keypath]
+    return tuple(int(k) if k.removeprefix("-").isnumeric() else k for k in keypath)  # type: ignore
 
 
 def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
@@ -149,23 +155,23 @@ def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, 
     res = source
     seen_keys = set()
     for key in keys_to_drop:
-        if key not in seen_keys:
+        curr_keypath = _get_tokenized_keypath(key)
+        if curr_keypath not in seen_keys:
             if v := _nested_get(res, key.split(".")):
-                curr_keypath = _get_tokenized_keypath(key)
                 # Check if value has a DROP object
                 if isinstance(v, DROP):
                     # If "out of bounds", raise an error
-                    if -1 * v.value > len(curr_keypath):
-                        raise RuntimeError(f"Error: DROP level {v} at {key} is out-of-bounds")
-                    curr_keypath = curr_keypath[: v.value]
+                    if v.value > 0 or -1 * v.value > len(curr_keypath):
+                        raise RuntimeError(f"Error: DROP level {v} at {key} is invalid")
+                    curr_keypath = curr_keypath[: v.value]  # type: ignore
                     # Handle case for dropping entire object
                     if len(curr_keypath) == 0:
                         return dict()
                 if updated := _nested_set(res, curr_keypath, None):
                     res = updated
-                seen_keys.add(".".join([str(kp) for kp in curr_keypath]))
+                seen_keys.add(curr_keypath)
         else:
-            seen_keys.add(key)
+            seen_keys.add(curr_keypath)
     return res
 
 
