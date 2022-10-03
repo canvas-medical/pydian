@@ -1,8 +1,8 @@
-# Pydian - pythonic data manipulation
+# Pydian: pythonic data interchange
 
-Pydian is a pure Python library for repeatable and sharable data mappings. Pydian reduces boilerplate and provides a framework for expressively mapping data through Python `dict` objects and native list + dict comprehension.
+Pydian is a pure Python library for repeatable and sharable data mappings and transformations. Pydian reduces boilerplate and provides a framework for expressively mapping data through Python `dict` objects and native sequence comprehensions.
 
-With Pydian, you can grab data from heavily nested dicts using `get`:
+With Pydian, you can grab and manipulate data from heavily nested dicts using `get`:
 ```python
 from pydian import get
 
@@ -32,7 +32,7 @@ assert get(payload, 'list_of_objects[*].val') == [1,2,3]
 assert get(payload, 'somekey.nope.not.there', apply=str.upper) == None
 ```
 
-For more complex data mapping tasks, the `Mapper` framework provides additional benefits:
+For complex data mapping tasks, the `Mapper` framework provides additional benefits:
 ```python
 from pydian import DROP, Mapper, get
 
@@ -70,7 +70,7 @@ def mapping_fn(source: dict) -> dict:
         ]
     }
 
-# Use the `Mapper` class to get post-processing features like null value removal and DROP handling
+# Use the `Mapper` class to get post-processing features like null value removal and conditional dropping
 mapper = Mapper(mapping_fn)
 
 # Get an iterpretable result that syntactically matches the mapping function!
@@ -96,7 +96,7 @@ Pydian defines a special `get` function that provides a simple syntax for:
     - Index into lists, e.g. `[0]`, `[-1]`
     - Unwrap a list of dicts with `[*]`
 - Chaining successful operations with `apply`
-- Add conditionals with `only_if`
+- Add a pre-condition with `only_if`
 - Specifying conditional dropping with `drop_level` (see [below](./README.md#conditional-dropping))
 
 `None` handling is built-in which reduces boilerplate code!
@@ -104,18 +104,18 @@ Pydian defines a special `get` function that provides a simple syntax for:
 ## `Mapper` Functionality
 
 The `Mapper` framework provides a consistent way of abstracting mapping steps as well as several useful post-processing steps, including:
-1. [Null value removal](./README.md#null-value-removal): Removing `None`, `''`, `[]`, `{}` values from the final result
+1. [Null value removal](./README.md#null-value-removal): Removing `None`, `""`, `[]`, `{}` values from the final result
 2. [Conditional dropping](./README.md#conditional-dropping): Drop key(s)/object(s) if a specific value is `None`
 
 ### Null value removal
 
 This is just a parameter on the `Mapper` object (`remove_empty`) which defaults to `True`.
 
-An "empty" value is handled in [lib/util.py](./pydian/lib/util.py) and includes: `None`, `''`, `[]`, `{}`
+An "empty" value is defined in [lib/util.py](./pydian/lib/util.py) and includes: `None`, `""`, `[]`, `{}`
 
 ### Conditional dropping
 
-This can be done during value evaluation in `get` which the `Mapper` object cleans up:
+This can be done during value evaluation in `get` which the `Mapper` object cleans up at runtime:
 ```python
 from pydian import Mapper, get
 from pydian import DROP
@@ -146,7 +146,7 @@ assert mapper(payload) == {
 
 For chained operations, it's pretty common to write a bunch of `lambda` functions. While this works, writing these can get verbose and cumbersome (e.g. writing something like `lambda x: x == 1` to check if something equals 1).
 
-As a convenience, Pydian provides library of partial wrappers that quickly generate 1-input, 1-output functions:
+As a convenience, Pydian provides library of partial wrappers that quickly provide 1-input, 1-output functions:
 ```python
 from pydian import get
 import pydian.partials as P
