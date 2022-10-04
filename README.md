@@ -1,4 +1,4 @@
-# Pydian: pythonic data interchange
+# Pydian - pythonic data interchange
 
 Pydian is a pure Python library for repeatable and sharable data mappings and transformations. Pydian reduces boilerplate and provides a framework for expressively mapping data through Python `dict` objects and native sequence comprehensions.
 
@@ -22,13 +22,13 @@ payload = {
     ]
 }
 
-# Safely get values and chain operations
+# Conveniently get values and chain operations
 assert get(payload, 'some.deeply.nested[0].value', apply=str.upper) == 'HERE!'
 
 # Unwrap list structures with [*]
 assert get(payload, 'list_of_objects[*].val') == [1,2,3]
 
-# Null-checking is built-in! On failed operations, returns `None` instead of a stack trace
+# Safely specify your logic with built-in null checking (so you can handle `None` instead of a stack trace!)
 assert get(payload, 'somekey.nope.not.there', apply=str.upper) == None
 ```
 
@@ -63,7 +63,7 @@ def mapping_fn(source: dict) -> dict:
                 'maybe_present_value?': get(source, 'somekey.nope.not.there', apply=str.upper),
                 # Use the DROP enum to set objects to `None` relative to the data element
                 'maybe_present_object?': {
-                    'static_value': 'Some static data', # Without DROP, this will always be present
+                    'other_static_value': 'More static data', # Without DROP, this will always be present
                     'maybe_present_value?': get(source, 'somekey.nope.not.there', apply=str.upper, drop_level=DROP.THIS_OBJECT)
                 },
             }
@@ -117,8 +117,7 @@ An "empty" value is defined in [lib/util.py](./pydian/lib/util.py) and includes:
 
 This can be done during value evaluation in `get` which the `Mapper` object cleans up at runtime:
 ```python
-from pydian import Mapper, get
-from pydian import DROP
+from pydian import DROP, Mapper, get
 
 payload = {
     'some': 'value'
