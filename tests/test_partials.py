@@ -40,6 +40,7 @@ def test_generic_apply_wrappers() -> None:
     assert P.add([4])(l) == l + [4]
     assert P.multiply(3)(l) == l * 3
 
+
 def test_generic_conditional_wrappers() -> None:
     value = {"a": "b", "c": "d"}
     copied_value = deepcopy(value)
