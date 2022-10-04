@@ -28,13 +28,14 @@ assert get(payload, 'some.deeply.nested[0].value', apply=str.upper) == 'HERE!'
 # Unwrap list structures with [*]
 assert get(payload, 'list_of_objects[*].val') == [1,2,3]
 
-# Safely specify your logic with built-in null checking (so you can handle `None` instead of a stack trace!)
+# Safely specify your logic with built-in null checking (handle `None` instead of a stack trace!)
 assert get(payload, 'somekey.nope.not.there', apply=str.upper) == None
 ```
 
 For complex data mapping tasks, the `Mapper` framework provides additional benefits:
 ```python
 from pydian import DROP, Mapper, get
+from typing import Any
 
 # Same example from above
 payload = {
@@ -53,7 +54,7 @@ payload = {
 }
 
 # Specify your logic as data in a centralized mapping function (dict -> dict)
-def mapping_fn(source: dict) -> dict:
+def mapping_fn(source: dict[str, Any]) -> dict[str, Any]:
     return {
         'res_list': [
             {
