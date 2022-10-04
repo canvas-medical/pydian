@@ -63,12 +63,12 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             index_part = match.group(2)
             if index_part == "*":
                 return _handle_ending_star_unwrap(source.get(key_part))
-            values = source.get(key_part, [])
+            values = source.get(key_part)
+            if values is None:
+                values = []
             try:
                 return values[int(index_part)]
             except IndexError:
-                return default
-            except TypeError:
                 return default
     return source.get(key, default)
 
@@ -124,11 +124,7 @@ def _nested_set(
         for k in tokenized_key_list[:-1]:
             res = res[k]  # type: ignore
         res[tokenized_key_list[-1]] = target  # type: ignore
-    except KeyError:
-        return None
     except IndexError:
-        return None
-    except TypeError:
         return None
     return source
 
