@@ -129,7 +129,7 @@ def _nested_set(
     return source
 
 
-def _get_tokenized_keypath(key: str) -> tuple[str | int]:
+def _get_tokenized_keypath(key: str) -> tuple[str | int, ...]:
     """
     Returns a keypath with str and ints separated.
 
@@ -137,7 +137,7 @@ def _get_tokenized_keypath(key: str) -> tuple[str | int]:
     """
     tokenized_key = key.replace("[", ".").replace("]", "")
     keypath = tokenized_key.split(".")
-    return tuple(int(k) if k.removeprefix("-").isnumeric() else k for k in keypath)  # type: ignore
+    return tuple(int(k) if k.removeprefix("-").isnumeric() else k for k in keypath)
 
 
 def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, Any]:
@@ -159,7 +159,7 @@ def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, 
                     # If "out of bounds", raise an error
                     if v.value > 0 or -1 * v.value > len(curr_keypath):
                         raise RuntimeError(f"Error: DROP level {v} at {key} is invalid")
-                    curr_keypath = curr_keypath[: v.value]  # type: ignore
+                    curr_keypath = curr_keypath[: v.value]
                     # Handle case for dropping entire object
                     if len(curr_keypath) == 0:
                         return dict()
