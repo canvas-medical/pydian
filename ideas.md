@@ -5,6 +5,9 @@ List of some feature/design ideas that aren't a priority now though could be int
 
 Remove from this list and re-scope accordingly once actually actively working an idea.
 
+## Add Enum to represent an empty object
+
+E.g. `EmptyDict`, `EmptyString`, etc. This will make the `remove_empty` checks more discrete and also give the framework a way of explicitly allowing sending an "empty" object (whenever it's semantically relevant)
 
 ## Multiple get syntax (e.g. on unwrap)
 
@@ -46,7 +49,10 @@ Don't add this until it's useful (discourage overly complex logic)
 
 
 ## Database-like Support
-Support reading from a group of objects, either from SQL or from groups of objects (i.e. NoSQL collections)
+Support reading from a group of objects, either from SQL or from groups of objects (i.e. NoSQL collections).
+
+Maybe add a wrapper that provides an alternative besides `DataFrames` to work with SQL results (or encourage list of dicts, even with data sharding)?
+
 ### Native JOIN Logic Handling
 If this connected to a relational database, it could be really interesting to add a way to join tables via the mapping dictionary, e.g.:
 ```python

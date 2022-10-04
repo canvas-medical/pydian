@@ -1,12 +1,11 @@
 [tool.poetry]
 name = "pydian"
-version = "0.2.0"
-description = "Library for pythonic data mapping"
+version = "0.2.1"
+description = "Library for pythonic data interchange"
 authors = ["Eric Pan <eric.pan@canvasmedical.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-python-benedict = "^0.25.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

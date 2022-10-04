@@ -1,6 +1,6 @@
 from typing import Any
 
-from .dicts import nested_delete
+from .dicts import drop_keys
 from .lib.util import remove_empty_values
 from .types import DROP, MappingFunc
 
@@ -23,7 +23,7 @@ class Mapper:
         # Handle any DROP-flagged values
         keys_to_drop = self._get_keys_to_drop_set(res)
         if keys_to_drop:
-            res = nested_delete(res, keys_to_drop)
+            res = drop_keys(res, keys_to_drop)
 
         # Remove empty values
         if self.remove_empty:

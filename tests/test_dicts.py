@@ -2,7 +2,7 @@ from typing import Any
 
 import pydian.partials as P
 from pydian import Mapper, get
-from pydian.dicts import nested_delete
+from pydian.dicts import drop_keys
 
 
 def test_get(simple_data: dict[str, Any]) -> None:
@@ -73,14 +73,14 @@ def test_nested_get(nested_data: dict[str, Any]) -> None:
     }
 
 
-def test_nested_delete(nested_data: dict[str, Any]) -> None:
+def test_drop_keys(nested_data: dict[str, Any]) -> None:
     source = nested_data
     keys_to_drop = {
         "data[0].patient",
         "data[2].patient.id",
         "data[3].patient.active",
     }
-    res = nested_delete(source, keys_to_drop)
+    res = drop_keys(source, keys_to_drop)
     for k in keys_to_drop:
         assert get(res, k) is None
 

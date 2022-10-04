@@ -12,14 +12,14 @@ def test_drop(simple_data: dict[str, Any]) -> None:
         return {
             "CASE_parent_keep": {
                 "CASE_curr_drop": {
-                    "a": get(m, "notFoundKey", drop_level=DROP.THIS_OBJECT),
+                    "a": DROP.THIS_OBJECT,
                     "b": "someValue",
                 },
-                "CASE_curr_keep": {"id": get(m, "data.patient.id", drop_level=DROP.THIS_OBJECT)},
+                "CASE_curr_keep": {"id": get(m, "data.patient.id")},
             },
-            "CASE_list": [get(m, "notFoundKey", drop_level=DROP.THIS_OBJECT)],
+            "CASE_list": [DROP.THIS_OBJECT],
             "CASE_list_of_objects": [
-                {"a": get(m, "notFoundKey", drop_level=DROP.PARENT), "b": "someValue"},
+                {"a": DROP.PARENT, "b": "someValue"},
                 {"a": "someValue", "b": "someValue"},
             ],
         }
@@ -29,30 +29,46 @@ def test_drop(simple_data: dict[str, Any]) -> None:
     assert res == {"CASE_parent_keep": {"CASE_curr_keep": {"id": get(source, "data.patient.id")}}}
 
 
-def test_drop_out_of_bounds(simple_data: dict[str, Any]) -> None:
-    source = simple_data
+def test_drop_out_of_bounds() -> None:
+    source: dict[str, Any] = {}
 
     def mapping(m: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "parent": {
-                "CASE_no_grandparent": get(m, "notFoundKey", drop_level=DROP.GREATGRANDPARENT)
-            }
-        }
+        return {"parent": {"CASE_no_grandparent": DROP.GREATGRANDPARENT}}
 
     mapper = Mapper(mapping)
     with pytest.raises(RuntimeError):
         _ = mapper(source)
 
 
-def test_drop_exact_level(simple_data: dict[str, Any]) -> None:
-    source = simple_data
+def test_drop_exact_level() -> None:
+    source: dict[str, Any] = {}
 
     def mapping(m: dict[str, Any]) -> dict[str, Any]:
         return {
-            "parent": {"CASE_has_parent_object": get(m, "notFoundKey", drop_level=DROP.PARENT)},
+            "parent": {"CASE_has_parent_object": DROP.PARENT},
             "other_data": 123,
         }
 
     mapper = Mapper(mapping)
     res = mapper(source)
     assert res == {}
+
+
+def test_drop_repeat() -> None:
+    source: dict[str, Any] = {}
+
+    def mapping(_: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "dropped_direct": [DROP.THIS_OBJECT, DROP.THIS_OBJECT],
+            "also_dropped": [{"parent_key": DROP.PARENT}, DROP.THIS_OBJECT],
+            "partially_dropped": [
+                "first_kept",
+                {"second_dropped": DROP.THIS_OBJECT},
+                "third_kept",
+                {"fourth_dropped": DROP.THIS_OBJECT},
+            ],
+        }
+
+    mapper = Mapper(mapping)
+    res = mapper(source)
+    assert res == {"partially_dropped": ["first_kept", "third_kept"]}
