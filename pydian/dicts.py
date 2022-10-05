@@ -50,7 +50,7 @@ def get(
     return res
 
 
-REGEX_INDEX = re.compile(r"(.*)\[(-?\d+|\*)\]$")
+REGEX_INDEX = re.compile(r"(.*)\[(-?\d*:?-?\d*|\*)\]$")
 
 
 def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -67,7 +67,20 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             if values is None:
                 values = []
             try:
-                return values[int(index_part)]
+                # Handle slicing
+                if ":" in index_part:
+                    first_part, second_part = index_part.split(":", maxsplit=1)
+                    if first_part and second_part:
+                        return values[int(first_part) : int(second_part)]
+                    elif first_part:
+                        return values[int(first_part) :]
+                    elif second_part:
+                        return values[: int(second_part)]
+                    # Passed just ":", which means return entire list
+                    else:
+                        return values
+                else:
+                    return values[int(index_part)]
             except IndexError:
                 return default
     return source.get(key, default)

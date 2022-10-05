@@ -15,12 +15,6 @@ def test_get(simple_data: dict[str, Any]) -> None:
             "CASE_nested": get(m, "data.patient.id"),
             "CASE_nested_as_list": [get(m, "data.patient.active")],
             "CASE_modded": get(m, "data.patient.id", apply=lambda s: s + "_modified"),
-            "CASE_index_list": {
-                "first": get(m, "list_data[0].patient"),
-                "second": get(m, "list_data[1].patient"),
-                "out_of_bounds": get(m, "list_data[2].patient"),
-                "negative_index": get(m, "list_data[-1].patient"),
-            },
         }
 
     mapper = Mapper(mapping, remove_empty=True)
@@ -31,10 +25,37 @@ def test_get(simple_data: dict[str, Any]) -> None:
         "CASE_nested": source["data"]["patient"]["id"],
         "CASE_nested_as_list": [source["data"]["patient"]["active"]],
         "CASE_modded": source["data"]["patient"]["id"] + "_modified",
-        "CASE_index_list": {
-            "first": source["list_data"][0]["patient"],
-            "second": source["list_data"][1]["patient"],
-            "negative_index": source["list_data"][-1]["patient"],
+    }
+
+
+def test_get_index(simple_data: dict[str, Any]) -> None:
+    source = simple_data
+
+    def mapping(m: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "first": get(m, "list_data[0].patient"),
+            "second": get(m, "list_data[1].patient"),
+            "out_of_bounds": get(m, "list_data[50].patient"),
+            "negative_index": get(m, "list_data[-1].patient"),
+            "slice": {
+                "both": get(m, "list_data[1:3]"),
+                "left": get(m, "list_data[1:]"),
+                "right": get(m, "list_data[:2]"),
+                "all": get(m, "list_data[:]"),
+            },
+        }
+
+    mapper = Mapper(mapping, remove_empty=True)
+    res = mapper(source)
+    assert res == {
+        "first": source["list_data"][0]["patient"],
+        "second": source["list_data"][1]["patient"],
+        "negative_index": source["list_data"][-1]["patient"],
+        "slice": {
+            "both": source["list_data"][1:3],
+            "left": source["list_data"][1:],
+            "right": source["list_data"][:2],
+            "all": source["list_data"][:],
         },
     }
 

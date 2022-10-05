@@ -41,13 +41,6 @@ assert get(nested_source, 'l[*].(a.1.2,b.3.4)') == [(5, 6), (7, 8)]
 ... then could also query and do more things on top of that
 
 
-## List Slicing
-
-E.g. `l[1:].a`, or `l[:-1].a`, or `l[1:-1].a,b`, etc.
-
-Don't add this until it's useful (discourage overly complex logic)
-
-
 ## Database-like Support
 Support reading from a group of objects, either from SQL or from groups of objects (i.e. NoSQL collections).
 

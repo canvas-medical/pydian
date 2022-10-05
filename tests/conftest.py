@@ -8,6 +8,7 @@ def simple_data() -> dict[str, Any]:
     return {
         "data": {"patient": {"id": "abc123", "active": True}},
         "list_data": [
+            {"patient": {"id": "abc123", "active": True}},
             {"patient": {"id": "def456", "active": True}},
             {"patient": {"id": "ghi789", "active": False}},
         ],
