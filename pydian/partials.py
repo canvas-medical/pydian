@@ -1,6 +1,6 @@
 from functools import partial
 from itertools import islice
-from typing import Any, Callable, Container, Iterable, Reversible
+from typing import Any, Callable, Container, Iterable, Reversible, TypeVar
 
 import pydian
 from pydian.lib.types import DROP, ApplyFunc, ConditionalCheck
@@ -68,8 +68,11 @@ def divide(value: Any, before: bool = False) -> ApplyFunc:
     return lambda v: v / value
 
 
-def keep(n: int) -> ApplyFunc | Callable[[Iterable], list[Any]]:
-    return lambda it: list(islice(it, n))
+T = TypeVar("T", list[Any], tuple[Any])
+
+
+def keep(n: int) -> ApplyFunc | Callable[[T], T]:
+    return lambda it: type(it)((islice(it, n)))
 
 
 def index(idx: int) -> ApplyFunc | Callable[[Reversible], Any]:
