@@ -102,7 +102,7 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
     # Handle base cases
     match len(key_list):
         case 0:
-            return None
+            return default
         case 1:
             return _single_get(source, key_list[0], default)
 
