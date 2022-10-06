@@ -135,3 +135,71 @@ def test_get_only_if(simple_data: dict[str, Any]) -> None:
     fails_check = get(source, KEY, only_if=lambda s: str.startswith(s, "000"), apply=str.upper)
     assert passes_check == source["data"]["patient"]["id"].upper()
     assert fails_check is None
+
+
+def test_get_single_key_tuple(simple_data: dict[str, Any]) -> None:
+    source = simple_data
+    assert get(source, "data.patient.(id,active)") == (
+        source["data"]["patient"]["id"],
+        source["data"]["patient"]["active"],
+    )
+    # Allow whitespace within parens
+    assert get(source, "data.patient.(id, active)") == get(source, "data.patient.(id,active)")
+    assert get(source, "data.patient.(id,active,missingKey)") == (
+        source["data"]["patient"]["id"],
+        source["data"]["patient"]["active"],
+        None,
+    )
+    # Expect list unwrapping to still work
+    assert get(source, "list_data[*].patient.(id, active)") == [
+        (p["patient"]["id"], p["patient"]["active"]) for p in source["list_data"]
+    ]
+    assert get(source, "list_data[*].patient.(id, active, missingKey)") == [
+        (p["patient"]["id"], p["patient"]["active"], None) for p in source["list_data"]
+    ]
+
+    # Test default (expect at each tuple item on a failed get)
+    STR_DEFAULT = "Missing!"
+    assert get(source, "data.patient.(id, active, missingKey)", default=STR_DEFAULT) == (
+        source["data"]["patient"]["id"],
+        source["data"]["patient"]["active"],
+        STR_DEFAULT,
+    )
+
+    # Test apply
+    assert (
+        get(source, "data.patient.(id, active, missingKey)", apply=P.index(1))
+        == source["data"]["patient"]["active"]
+    )
+    assert get(source, "data.patient.(id, active, missingKey)", apply=P.keep(2)) == (
+        source["data"]["patient"]["id"],
+        source["data"]["patient"]["active"],
+    )
+
+    # Test only_if filtering
+    assert get(source, "data.patient.(id, active, missingKey)", only_if=lambda _: False) == None
+
+
+def test_get_nested_key_tuple(nested_data: dict[str, Any]) -> None:
+    source = nested_data
+
+    # Single item example
+    single_item_example = source["data"][0]["patient"]["dicts"][0]
+    assert get(source, "data[0].patient.dicts[0].(num, text)") == (
+        single_item_example["num"],
+        single_item_example["text"],
+    )
+    assert get(source, "data[0].patient.dicts[0].(num,inner.msg)") == (
+        single_item_example["num"],
+        single_item_example["inner"]["msg"],
+    )
+
+    # Multi-item example
+    assert get(source, "data[*].patient.dict.(char, inner.msg)") == [
+        (d["patient"]["dict"]["char"], d["patient"]["dict"]["inner"]["msg"]) for d in source["data"]
+    ]
+
+    # Multi-item on multi-[*] example
+    assert get(source, "data[*].patient.dicts[*].(num, inner.msg)") == [
+        [(obj["num"], obj["inner"]["msg"]) for obj in d["patient"]["dicts"]] for d in source["data"]
+    ]
