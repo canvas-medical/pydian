@@ -9,13 +9,15 @@ def test_get(simple_data: dict[str, Any]) -> None:
     FAIL_DEFAULT_STR = "n/a"
     res = {
         "CASE_successful_get": P.get("data.patient.id", apply=str.upper)(source),
-        "CASE_failed_get": P.get("something_not_there", default=FAIL_DEFAULT_STR, apply=str.upper)(
+        "CASE_default_get": P.get("something_not_there", default=FAIL_DEFAULT_STR, apply=str.upper)(
             source
         ),
+        "CASE_failed_get": P.get("something_not_there", apply=str.upper)(source),
     }
     assert res == {
         "CASE_successful_get": str.upper(source["data"]["patient"]["id"]),
-        "CASE_failed_get": str.upper(FAIL_DEFAULT_STR),
+        "CASE_default_get": str.upper(FAIL_DEFAULT_STR),
+        "CASE_failed_get": None,
     }
 
 
