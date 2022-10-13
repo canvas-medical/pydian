@@ -30,6 +30,12 @@ def test_do() -> None:
     str_param_fn_2 = P.do(some_function, **kwargs)
     assert some_function("Ma", 100) == str_param_fn_1("Ma") == str_param_fn_2("Ma")
 
+    # Test stdlib wrappers
+    EXAMPLE_STR = "Some String"
+    assert P.do(str.replace, "S", "Z")(EXAMPLE_STR) == EXAMPLE_STR.replace("S", "Z")
+    assert P.do(str.startswith, "S")(EXAMPLE_STR) == EXAMPLE_STR.startswith("S")
+    assert P.do(str.endswith, "S")(EXAMPLE_STR) == EXAMPLE_STR.endswith("S")
+
 
 def test_generic_apply_wrappers() -> None:
     n = 100
@@ -69,10 +75,6 @@ def test_iterable_wrappers() -> None:
 
 
 def test_stdlib_wrappers() -> None:
-    EXAMPLE_STR = "Some String"
     EXAMPLE_LIST = ["a", "b", "c"]
     assert P.map_to_list(str.upper)(EXAMPLE_LIST) == ["A", "B", "C"]
     assert P.filter_to_list(P.equals("a"))(EXAMPLE_LIST) == ["a"]
-    assert P.str_replace("S", "Z")(EXAMPLE_STR) == EXAMPLE_STR.replace("S", "Z")
-    assert P.str_startswith("S")(EXAMPLE_STR) == EXAMPLE_STR.startswith("S")
-    assert P.str_endswith("S")(EXAMPLE_STR) == EXAMPLE_STR.endswith("S")
