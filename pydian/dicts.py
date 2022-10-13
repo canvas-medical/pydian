@@ -3,7 +3,7 @@ from collections import deque
 from itertools import chain
 from typing import Any, Iterable, Sequence, TypeVar
 
-from pydian.types import DROP, ApplyFunc, ConditionalCheck
+from pydian.lib.types import DROP, ApplyFunc, ConditionalCheck
 
 
 def get(

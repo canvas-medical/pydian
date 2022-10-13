@@ -3,7 +3,7 @@ from itertools import islice
 from typing import Any, Callable, Container, Iterable, Reversible
 
 import pydian
-from pydian.types import DROP, ApplyFunc, ConditionalCheck
+from pydian.lib.types import DROP, ApplyFunc, ConditionalCheck
 
 """
 `pydian` Wrappers

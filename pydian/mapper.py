@@ -1,8 +1,8 @@
 from typing import Any
 
 from .dicts import drop_keys
+from .lib.types import DROP, MappingFunc
 from .lib.util import remove_empty_values
-from .types import DROP, MappingFunc
 
 
 class Mapper:
