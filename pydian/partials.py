@@ -140,7 +140,7 @@ stdlib Wrappers
 """
 
 
-def map_then_list(apply: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
+def map_to_list(apply: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `map`, then casts to a list
     """
@@ -148,7 +148,7 @@ def map_then_list(apply: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]
     return partial(_map_to_list, apply)
 
 
-def filter_then_list(keep_filter: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
+def filter_to_list(keep_filter: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `filter`, then casts to a list
     """
@@ -156,7 +156,7 @@ def filter_then_list(keep_filter: Callable) -> ApplyFunc | Callable[[Iterable], 
     return partial(_filter_to_list, keep_filter)
 
 
-def replace_str(old: str, new: str) -> ApplyFunc | Callable[[str], str]:
+def str_replace(old: str, new: str) -> ApplyFunc | Callable[[str], str]:
     """
     Partial wrapper for `str.replace`
     """

@@ -89,8 +89,8 @@ def test_get_apply(simple_data: dict[str, Any]) -> None:
     source = simple_data
     OLD_STR, NEW_STR = "456", "FourFiveSix"
     single_apply = str.upper
-    chained_apply = [str.upper, P.replace_str(OLD_STR, NEW_STR)]
-    failed_chain_apply = [str.upper, lambda x: None, P.replace_str(OLD_STR, NEW_STR)]
+    chained_apply = [str.upper, P.str_replace(OLD_STR, NEW_STR)]
+    failed_chain_apply = [str.upper, lambda x: None, P.str_replace(OLD_STR, NEW_STR)]
     res = {
         "single_apply": get(source, "data.patient.id", apply=single_apply),
         "chained_apply": get(source, "list_data[0].patient.id", apply=chained_apply),

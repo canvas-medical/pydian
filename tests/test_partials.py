@@ -69,8 +69,8 @@ def test_iterable_wrappers() -> None:
 def test_stdlib_wrappers() -> None:
     EXAMPLE_STR = "Some String"
     EXAMPLE_LIST = ["a", "b", "c"]
-    assert P.map_then_list(str.upper)(EXAMPLE_LIST) == ["A", "B", "C"]
-    assert P.filter_then_list(P.equals("a"))(EXAMPLE_LIST) == ["a"]
-    assert P.replace_str("S", "Z")(EXAMPLE_STR) == EXAMPLE_STR.replace("S", "Z")
+    assert P.map_to_list(str.upper)(EXAMPLE_LIST) == ["A", "B", "C"]
+    assert P.filter_to_list(P.equals("a"))(EXAMPLE_LIST) == ["a"]
+    assert P.str_replace("S", "Z")(EXAMPLE_STR) == EXAMPLE_STR.replace("S", "Z")
     assert P.str_startswith("S")(EXAMPLE_STR) == EXAMPLE_STR.startswith("S")
     assert P.str_endswith("S")(EXAMPLE_STR) == EXAMPLE_STR.endswith("S")
