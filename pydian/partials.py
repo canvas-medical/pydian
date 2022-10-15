@@ -49,19 +49,27 @@ def do(func: Callable, *args: Any, **kwargs: Any) -> ApplyFunc:
     return res
 
 
-def add(value: Any) -> ApplyFunc:
+def add(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value + v
     return lambda v: v + value
 
 
-def subtract(value: Any) -> ApplyFunc:
+def subtract(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value - v
     return lambda v: v - value
 
 
-def multiply(value: Any) -> ApplyFunc:
+def multiply(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value * v
     return lambda v: v * value
 
 
-def divide(value: Any) -> ApplyFunc:
+def divide(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value / v
     return lambda v: v / value
 
 

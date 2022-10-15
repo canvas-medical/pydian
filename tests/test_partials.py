@@ -41,12 +41,18 @@ def test_generic_apply_wrappers() -> None:
     n = 100
     assert P.add(1)(n) == n + 1
     assert P.subtract(1)(n) == n - 1
+    assert P.subtract(1, before=True)(n) == 1 - n
     assert P.multiply(10)(n) == n * 10
     assert P.divide(10)(n) == n / 10
+    assert P.divide(10, before=True)(n) == 10 / n
 
     l = [1, 2, 3]
     assert P.add([4])(l) == l + [4]
-    assert P.multiply(3)(l) == l * 3
+    assert P.add([4], before=True)(l) == [4] + l
+
+    f = 4.2
+    assert P.multiply(3)(f) == 3 * f
+    assert P.multiply(3, before=True)(f * f) == (f * f) * 3
 
 
 def test_generic_conditional_wrappers() -> None:
