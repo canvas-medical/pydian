@@ -162,6 +162,7 @@ source = {
 
 assert p.equals(1)(1) == True
 assert p.equivalent(False)(False) == True
+assert get(source, 'some_values', apply=p.index(0), only_if=p.contains(350)) == 250
 assert get(source, 'some_values', apply=p.index(0), only_if=p.contains(9000)) == None
 assert get(source, 'some_values', apply=p.index(1)) == 350
 assert get(source, 'some_values', apply=p.keep(2)) == [250, 350]
