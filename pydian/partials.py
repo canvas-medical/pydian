@@ -41,12 +41,7 @@ def do(func: Callable, *args: Any, **kwargs: Any) -> ApplyFunc:
 
     Starts at the second parameter when using *args (as opposed to the first).
     """
-    res = func
-    if args:
-        res = lambda x: func(x, *args)
-    elif kwargs:
-        res = partial(func, **kwargs)
-    return res
+    return lambda x: func(x, *args, **kwargs)
 
 
 def add(value: Any, before: bool = False) -> ApplyFunc:

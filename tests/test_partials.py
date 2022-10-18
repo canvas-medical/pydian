@@ -22,16 +22,52 @@ def test_get(simple_data: dict[str, Any]) -> None:
 
 
 def test_do() -> None:
+    EXAMPLE_STR = "Some String"
+    EXAMPLE_INT = 100
+    # Test passing args or kwargs
     def some_function(first: str, second: int) -> str:
-        return f"Look {first}, I have an int {second}!"
+        return f"{first}, {second}!"
 
-    kwargs = {"second": 100}  # Passes in any order
-    str_param_fn_1 = p.do(some_function, 100)  # Partially applies starting at second parameter
+    kwargs = {"second": EXAMPLE_INT}  # Passes in any order
+    str_param_fn_1 = p.do(
+        some_function, EXAMPLE_INT
+    )  # Partially applies starting at second parameter
     str_param_fn_2 = p.do(some_function, **kwargs)
-    assert some_function("Ma", 100) == str_param_fn_1("Ma") == str_param_fn_2("Ma")
+    assert some_function("Ma", EXAMPLE_INT) == str_param_fn_1("Ma") == str_param_fn_2("Ma")
+
+    # Test passing args and kwargs
+    def other_function(
+        first: str, second: int, third: bool, fourth: list[str] = [], fifth: set[int] = set()
+    ) -> str:
+        return f"{first}, {second}, {third}? {fourth}, {fifth}!"
+
+    other_str_fn_1 = p.do(
+        other_function, EXAMPLE_INT, True, [EXAMPLE_STR], **{"fifth": {EXAMPLE_INT}}
+    )
+    other_str_fn_2 = p.do(
+        other_function, EXAMPLE_INT, True, **{"fourth": [EXAMPLE_STR], "fifth": {EXAMPLE_INT}}
+    )
+    other_str_fn_3 = p.do(
+        other_function,
+        EXAMPLE_INT,
+        **{"third": True, "fourth": [EXAMPLE_STR], "fifth": {EXAMPLE_INT}},
+    )
+    other_str_fn_4 = p.do(other_function, EXAMPLE_INT, **{"third": True, "fifth": {EXAMPLE_INT}})
+    other_str_fn_5 = p.do(other_function, EXAMPLE_INT, **{"third": True, "fourth": [EXAMPLE_STR]})
+    assert (
+        other_function(EXAMPLE_STR, EXAMPLE_INT, True, [EXAMPLE_STR], {EXAMPLE_INT})
+        == other_str_fn_1(EXAMPLE_STR)
+        == other_str_fn_2(EXAMPLE_STR)
+        == other_str_fn_3(EXAMPLE_STR)
+    )
+    assert other_function(EXAMPLE_STR, EXAMPLE_INT, True, [], {EXAMPLE_INT}) == other_str_fn_4(
+        EXAMPLE_STR
+    )
+    assert other_function(EXAMPLE_STR, EXAMPLE_INT, True, [EXAMPLE_STR], set()) == other_str_fn_5(
+        EXAMPLE_STR
+    )
 
     # Test stdlib wrappers
-    EXAMPLE_STR = "Some String"
     assert p.do(str.replace, "S", "Z")(EXAMPLE_STR) == EXAMPLE_STR.replace("S", "Z")
     assert p.do(str.startswith, "S")(EXAMPLE_STR) == EXAMPLE_STR.startswith("S")
     assert p.do(str.endswith, "S")(EXAMPLE_STR) == EXAMPLE_STR.endswith("S")
