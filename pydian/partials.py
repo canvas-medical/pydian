@@ -72,7 +72,7 @@ T = TypeVar("T", list[Any], tuple[Any])
 
 
 def keep(n: int) -> ApplyFunc | Callable[[T], T]:
-    return lambda it: type(it)((islice(it, n)))
+    return lambda it: it[:n]
 
 
 def index(idx: int) -> ApplyFunc | Callable[[Reversible], Any]:

@@ -4,7 +4,7 @@ from itertools import chain
 from typing import Any, Iterable, Sequence, TypeVar
 
 from .lib.types import DROP, ApplyFunc, ConditionalCheck
-from .lib.util import split_key_with_tuples
+from .lib.util import split_key
 
 
 def get(
@@ -32,7 +32,7 @@ def get(
 
     Use `drop_level` to specify conditional dropping if get results in None.
     """
-    key_list = split_key_with_tuples(key) if "(" in key else key.split(".")
+    key_list = split_key(key)
     res = _nested_get(source, key_list, default)
 
     if res is not None and only_if:
@@ -76,16 +76,8 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             try:
                 # Handle slicing
                 if ":" in index_part:
-                    first_part, second_part = index_part.split(":", maxsplit=1)
-                    if first_part and second_part:
-                        return values[int(first_part) : int(second_part)]
-                    elif first_part:
-                        return values[int(first_part) :]
-                    elif second_part:
-                        return values[: int(second_part)]
-                    # Passed just ":", which means return entire list
-                    else:
-                        return values
+                    s = slice(*[int(s) if s else None for s in index_part.split(":")])
+                    return values[s]
                 else:
                     return values[int(index_part)]
             except IndexError:
