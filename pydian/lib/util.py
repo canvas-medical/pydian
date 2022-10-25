@@ -1,10 +1,10 @@
 from collections.abc import Collection
 from typing import Any, TypeVar
 
-T = TypeVar("T", list[Any], dict[str, Any])
+DL = TypeVar("DL", dict[str, Any], list[Any])
 
 
-def remove_empty_values(input: T) -> T:
+def remove_empty_values(input: DL) -> DL:
     """
     Recursively removes "empty" objects (`None` and/or objects only containing `None` values).
     """
@@ -28,4 +28,26 @@ def has_content(obj: Any) -> bool:
             res = any(has_content(item) for item in obj)
         elif isinstance(obj, dict):
             res = any(has_content(item) for item in obj.values())
+    return res
+
+
+def get_keys_containing_class(source: dict[str, Any], cls: type, key_prefix: str = "") -> set[str]:
+    """
+    Recursively finds all keys where a DROP object is found.
+    """
+    res = set()
+    for k, v in source.items():
+        curr_key = f"{key_prefix}.{k}" if key_prefix != "" else k
+        match v:
+            case cls() as v:
+                res.add(curr_key)
+            case dict() as v:
+                res |= get_keys_containing_class(v, cls, curr_key)
+            case list() as v:
+                for i, item in enumerate(v):
+                    indexed_keypath = f"{curr_key}[{i}]"
+                    if isinstance(item, cls):
+                        res.add(indexed_keypath)
+                    elif isinstance(item, dict):
+                        res |= get_keys_containing_class(item, cls, indexed_keypath)
     return res

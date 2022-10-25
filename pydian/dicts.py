@@ -1,5 +1,6 @@
 import re
 from collections import deque
+from enum import Enum
 from itertools import chain
 from typing import Any, Iterable, Sequence, TypeVar
 
@@ -144,7 +145,7 @@ def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, 
     """
     Returns the dictionary with the requested keys set to `None`.
 
-    If a key is a duplicate lookup fails, that key is skipped.
+    If a key is a duplicate, then lookup fails so that key is skipped.
 
     DROP values are checked and handled here.
     """
@@ -168,6 +169,18 @@ def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, 
                 seen_keys.add(curr_keypath)
         else:
             seen_keys.add(curr_keypath)
+    return res
+
+
+def impute_enum_values(source: dict[str, Any], keys_to_impute: set[str]) -> dict[str, Any]:
+    """
+    Returns the dictionary with the Enum values set to their corresponding `.value`
+    """
+    res = source
+    for key in keys_to_impute:
+        curr_val = _nested_get(res, key.split("."))
+        if isinstance(curr_val, Enum):
+            res = _nested_set(res, _get_tokenized_keypath(key), curr_val.value)  # type: ignore
     return res
 
 

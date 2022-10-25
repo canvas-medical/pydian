@@ -38,3 +38,28 @@ class DROP(Enum):
     PARENT = -2
     GRANDPARENT = -3
     GREATGRANDPARENT = -4
+
+
+class EMPTY(Enum):
+    """
+    An EMPTY enum is an intentional declaration in a data mapping that the specific "empty" value
+      should be intentionally kept by the Mapper class.
+    """
+
+    @staticmethod
+    def _get_immutable_enum_value(uid: str) -> Any:
+        """Dynamically gets the enum value (simulates immutability)"""
+        match uid:
+            case "dict":
+                return dict()
+            case "list":
+                return list()
+            case "str":
+                return ""
+            case _:
+                raise RuntimeError(f"Unhandled EMPTY enum, got: {uid}")
+
+    DICT = _get_immutable_enum_value("dict")
+    LIST = _get_immutable_enum_value("list")
+    STRING = _get_immutable_enum_value("str")
+    NONE = None
