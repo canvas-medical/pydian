@@ -3,7 +3,7 @@ from itertools import islice
 from typing import Any, Callable, Container, Iterable, Reversible
 
 import pydian
-from pydian.types import DROP, ApplyFunc, ConditionalCheck
+from pydian.lib.types import DROP, ApplyFunc, ConditionalCheck
 
 """
 `pydian` Wrappers
@@ -41,33 +41,30 @@ def do(func: Callable, *args: Any, **kwargs: Any) -> ApplyFunc:
 
     Starts at the second parameter when using *args (as opposed to the first).
     """
-    # To start partial application at second param, convert args -> kwargs based on index.
-    if not kwargs:
-        kwargs = {}
-    if args:
-        varnames = func.__code__.co_varnames
-        if len(args) >= len(varnames):
-            raise ValueError(
-                f"Received too many parameters to partial (expected at most {len(varnames) - 1}, got {len(args)})"
-            )
-        varnames_to_map = varnames[1:]
-        kwargs.update({varnames_to_map[i]: args[i] for i in range(len(args))})
-    return partial(func, **kwargs)
+    return lambda x: func(x, *args, **kwargs)
 
 
-def add(value: Any) -> ApplyFunc:
+def add(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value + v
     return lambda v: v + value
 
 
-def subtract(value: Any) -> ApplyFunc:
+def subtract(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value - v
     return lambda v: v - value
 
 
-def multiply(value: Any) -> ApplyFunc:
+def multiply(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value * v
     return lambda v: v * value
 
 
-def divide(value: Any) -> ApplyFunc:
+def divide(value: Any, before: bool = False) -> ApplyFunc:
+    if before:
+        return lambda v: value / v
     return lambda v: v / value
 
 
@@ -140,41 +137,17 @@ stdlib Wrappers
 """
 
 
-def map_then_list(apply: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
+def map_to_list(func: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `map`, then casts to a list
     """
-    _map_to_list: Callable = lambda func, it: list(map(func, it))
-    return partial(_map_to_list, apply)
+    _map_to_list: Callable = lambda fn, it: list(map(fn, it))
+    return partial(_map_to_list, func)
 
 
-def filter_then_list(keep_filter: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
+def filter_to_list(func: Callable) -> ApplyFunc | Callable[[Iterable], list[Any]]:
     """
     Partial wrapper for `filter`, then casts to a list
     """
-    _filter_to_list: Callable = lambda func, it: list(filter(func, it))
-    return partial(_filter_to_list, keep_filter)
-
-
-def replace_str(old: str, new: str) -> ApplyFunc | Callable[[str], str]:
-    """
-    Partial wrapper for `str.replace`
-    """
-    _str_replace: Callable = lambda old, new, s: str.replace(s, old, new)
-    return partial(_str_replace, old, new)
-
-
-def str_startswith(prefix: str) -> ApplyFunc | Callable[[str], bool]:
-    """
-    Partial wrapper for `str.startswith`
-    """
-    _str_startswith: Callable = lambda s, pre: str.startswith(s, pre)
-    return partial(_str_startswith, pre=prefix)
-
-
-def str_endswith(suffix: str) -> ApplyFunc | Callable[[str], bool]:
-    """
-    Partial wrapper for `str.endswith`
-    """
-    _str_endswith: Callable = lambda s, suf: str.endswith(s, suf)
-    return partial(_str_endswith, suf=suffix)
+    _filter_to_list: Callable = lambda fn, it: list(filter(fn, it))
+    return partial(_filter_to_list, func)

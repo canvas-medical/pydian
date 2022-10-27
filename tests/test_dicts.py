@@ -1,6 +1,6 @@
 from typing import Any
 
-import pydian.partials as P
+import pydian.partials as p
 from pydian import Mapper, get
 from pydian.dicts import drop_keys
 
@@ -89,8 +89,8 @@ def test_get_apply(simple_data: dict[str, Any]) -> None:
     source = simple_data
     OLD_STR, NEW_STR = "456", "FourFiveSix"
     single_apply = str.upper
-    chained_apply = [str.upper, P.replace_str(OLD_STR, NEW_STR)]
-    failed_chain_apply = [str.upper, lambda x: None, P.replace_str(OLD_STR, NEW_STR)]
+    chained_apply = [str.upper, p.do(str.replace, OLD_STR, NEW_STR)]
+    failed_chain_apply = [str.upper, lambda x: None, p.do(str.replace, OLD_STR, NEW_STR)]
     res = {
         "single_apply": get(source, "data.patient.id", apply=single_apply),
         "chained_apply": get(source, "list_data[0].patient.id", apply=chained_apply),

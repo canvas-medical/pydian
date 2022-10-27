@@ -149,7 +149,7 @@ For chained operations, it's pretty common to write a bunch of `lambda` function
 As a convenience, Pydian provides library of partial wrappers that quickly provide 1-input, 1-output functions:
 ```python
 from pydian import get
-import pydian.partials as P
+import pydian.partials as p
 
 # Arbitrary example
 source = {
@@ -160,11 +160,12 @@ source = {
     ]
 }
 
-assert P.equals(1)(1) == True
-assert P.equivalent(False)(False) == True
-assert get(source, 'some_values', apply=P.index(0), only_if=P.contains(9000)) == None
-assert get(source, 'some_values', apply=P.index(1)) == 350
-assert get(source, 'some_values', apply=P.keep(2)) == [250, 350]
+assert p.equals(1)(1) == True
+assert p.equivalent(False)(False) == True
+assert get(source, 'some_values', apply=p.index(0), only_if=p.contains(350)) == 250
+assert get(source, 'some_values', apply=p.index(0), only_if=p.contains(9000)) == None
+assert get(source, 'some_values', apply=p.index(1)) == 350
+assert get(source, 'some_values', apply=p.keep(2)) == [250, 350]
 ```
 
 ## Issues
