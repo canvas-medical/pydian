@@ -1,10 +1,9 @@
 import re
 from collections import deque
-from enum import Enum
 from itertools import chain
 from typing import Any, Iterable, Sequence, TypeVar
 
-from pydian.lib.types import DROP, ApplyFunc, ConditionalCheck
+from .lib.types import DROP, KEEP, ApplyFunc, ConditionalCheck
 
 
 def get(
@@ -179,8 +178,9 @@ def impute_enum_values(source: dict[str, Any], keys_to_impute: set[str]) -> dict
     res = source
     for key in keys_to_impute:
         curr_val = _nested_get(res, key.split("."))
-        if isinstance(curr_val, Enum):
-            res = _nested_set(res, _get_tokenized_keypath(key), curr_val.value)  # type: ignore
+        if isinstance(curr_val, KEEP):
+            literal_val = curr_val.value
+            res = _nested_set(res, _get_tokenized_keypath(key), literal_val)  # type: ignore
     return res
 
 

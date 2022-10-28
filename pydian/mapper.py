@@ -1,7 +1,7 @@
 from typing import Any
 
 from .dicts import drop_keys, impute_enum_values
-from .lib.types import DROP, EMPTY, MappingFunc
+from .lib.types import DROP, KEEP, MappingFunc
 from .lib.util import get_keys_containing_class, remove_empty_values
 
 
@@ -30,7 +30,7 @@ class Mapper:
             res = remove_empty_values(res)
 
         # Impute EMPTY values with corresponding value
-        keys_to_impute = get_keys_containing_class(res, EMPTY)
+        keys_to_impute = get_keys_containing_class(res, KEEP)
         if keys_to_impute:
             res = impute_enum_values(res, keys_to_impute)
 

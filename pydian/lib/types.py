@@ -40,26 +40,24 @@ class DROP(Enum):
     GREATGRANDPARENT = -4
 
 
-class EMPTY(Enum):
+class KEEP:
+    """
+    A value wrapped in a KEEP object should be ignored by the Mapper class when removing values.
+
+    Partial keeping is not currently supported (i.e. a KEEP object within an object to be DROP-ed).
+    """
+
+    def __init__(self, v: Any):
+        self.value = v
+
+
+class EMPTY:
     """
     An EMPTY enum is an intentional declaration in a data mapping that the specific "empty" value
       should be intentionally kept by the Mapper class.
     """
 
-    @staticmethod
-    def _get_immutable_enum_value(uid: str) -> Any:
-        """Dynamically gets the enum value (simulates immutability)"""
-        match uid:
-            case "dict":
-                return dict()
-            case "list":
-                return list()
-            case "str":
-                return ""
-            case _:
-                raise RuntimeError(f"Unhandled EMPTY enum, got: {uid}")
-
-    DICT = _get_immutable_enum_value("dict")
-    LIST = _get_immutable_enum_value("list")
-    STRING = _get_immutable_enum_value("str")
-    NONE = None
+    DICT = KEEP({})
+    LIST = KEEP([])
+    STRING = KEEP("")
+    NONE = KEEP(None)

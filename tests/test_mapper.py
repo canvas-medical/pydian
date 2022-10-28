@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 
 from pydian import Mapper, get
-from pydian.types import DROP, EMPTY
+from pydian.lib.types import DROP, EMPTY
 
 
 def test_drop(simple_data: dict[str, Any]) -> None:
