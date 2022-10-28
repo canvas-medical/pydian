@@ -33,7 +33,7 @@ def test_drop(simple_data: dict[str, Any]) -> None:
 def test_drop_out_of_bounds() -> None:
     source: dict[str, Any] = {}
 
-    def mapping(m: dict[str, Any]) -> dict[str, Any]:
+    def mapping(_: dict[str, Any]) -> dict[str, Any]:
         return {"parent": {"CASE_no_grandparent": DROP.GREATGRANDPARENT}}
 
     mapper = Mapper(mapping)
@@ -44,7 +44,7 @@ def test_drop_out_of_bounds() -> None:
 def test_drop_exact_level() -> None:
     source: dict[str, Any] = {}
 
-    def mapping(m: dict[str, Any]) -> dict[str, Any]:
+    def mapping(_: dict[str, Any]) -> dict[str, Any]:
         return {
             "parent": {"CASE_has_parent_object": DROP.PARENT},
             "other_data": 123,
