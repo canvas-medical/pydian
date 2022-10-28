@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 
 from pydian import Mapper, get
-from pydian.lib.types import DROP, EMPTY
+from pydian.lib.types import DROP, EMPTY, KEEP
 
 
 def test_drop(simple_data: dict[str, Any]) -> None:
@@ -89,6 +89,8 @@ def test_keep_empty_value() -> None:
                 "other_static_val": "Abc",
             },
             "static_val": "Def",
+            "empty_list": KEEP([]),
+            "removed_empty_list": [],
         }
 
     mapper = Mapper(mapping)
@@ -101,4 +103,5 @@ def test_keep_empty_value() -> None:
         "empty_vals": [{}, [], "", None],
         "nested_vals": {"dict": {}, "list": [], "str": "", "none": None, "other_static_val": "Abc"},
         "static_val": "Def",
+        "empty_list": [],
     }
