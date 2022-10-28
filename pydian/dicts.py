@@ -119,11 +119,11 @@ def _nested_set(
     """
     Returns a copy of source with the replace if successful, else None.
     """
-    res = source
+    res: Any = source
     try:
         for k in tokenized_key_list[:-1]:
-            res = res[k]  # type: ignore
-        res[tokenized_key_list[-1]] = target  # type: ignore
+            res = res[k]
+        res[tokenized_key_list[-1]] = target
     except IndexError:
         return None
     return source
