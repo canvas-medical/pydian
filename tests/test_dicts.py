@@ -168,10 +168,10 @@ def test_get_single_key_tuple(simple_data: dict[str, Any]) -> None:
 
     # Test apply
     assert (
-        get(source, "data.patient.(id, active, missingKey)", apply=P.index(1))
+        get(source, "data.patient.(id, active, missingKey)", apply=p.index(1))
         == source["data"]["patient"]["active"]
     )
-    assert get(source, "data.patient.(id, active, missingKey)", apply=P.keep(2)) == (
+    assert get(source, "data.patient.(id, active, missingKey)", apply=p.keep(2)) == (
         source["data"]["patient"]["id"],
         source["data"]["patient"]["active"],
     )
