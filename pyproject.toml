@@ -6,6 +6,7 @@ authors = ["Eric Pan <eric.pan@canvasmedical.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+jmespath = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

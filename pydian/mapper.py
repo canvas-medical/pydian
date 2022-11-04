@@ -29,7 +29,7 @@ class Mapper:
         if self.remove_empty:
             res = remove_empty_values(res)
 
-        # Impute EMPTY values with corresponding value
+        # Impute KEEP values with corresponding value
         keys_to_impute = get_keys_containing_class(res, KEEP)
         if keys_to_impute:
             res = impute_enum_values(res, keys_to_impute)

@@ -19,6 +19,6 @@ repos:
         language: python_venv
       - id: run-mypy
         name: Run mypy
-        entry: mypy
+        entry: mypy --ignore-missing-imports
         files: ^.*.py$
         language: python_venv

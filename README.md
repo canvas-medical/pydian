@@ -91,17 +91,16 @@ See the [mapping test examples](./tests/test_dicts.py) for a more involved look 
 
 ## `get` Functionality
 
-Pydian defines a special `get` function that provides a simple syntax for:
-- Getting nested items
-    - Chain gets with `.`
-    - Index into lists, e.g. `[0]`, `[-1]`
-    - Unwrap a list of dicts with `[*]`
-    - Get multiple items from a dict at once using `("firstKey", "secondKey")` syntax
+Pydian defines a special `get` function that leverages [JMESPath](https://jmespath.org/) and provides a simple syntax for:
+- Getting nested items using JMESPath syntax (examples [here](https://jmespath.org/examples.html))
 - Chaining successful operations with `apply`
 - Add a pre-condition with `only_if`
 - Specifying conditional dropping with `drop_level` (see [below](./README.md#conditional-dropping))
 
 `None` handling is built-in which reduces boilerplate code!
+
+Additional keypath features include:
+- Unwrap list-of-lists with an ending `[*]`
 
 ## `Mapper` Functionality
 

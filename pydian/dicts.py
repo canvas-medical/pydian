@@ -3,6 +3,8 @@ from collections import deque
 from itertools import chain
 from typing import Any, Iterable, Sequence, TypeVar
 
+import jmespath
+
 from .lib.types import DROP, KEEP, ApplyFunc, ConditionalCheck
 from .lib.util import split_key
 
@@ -32,8 +34,9 @@ def get(
 
     Use `drop_level` to specify conditional dropping if get results in None.
     """
-    key_list = split_key(key)
-    res = _nested_get(source, key_list, default)
+    res = _nested_get(source, key, default)
+    if key.endswith("[*]"):
+        res = _handle_ending_star_unwrap(res)  # type: ignore
 
     if res is not None and only_if:
         res = res if only_if(res) else None
@@ -54,45 +57,7 @@ def get(
     return res
 
 
-REGEX_INDEX = re.compile(r"(.*)\[(-?\d*:?-?\d*|\*)\]$")
-
-
-def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
-    """
-    Gets single item, supports int indexing, e.g. `someKey[0]`
-
-    Handles the tuple case, e.g. `(a, b)` which returns a tuple getting both values
-    """
-    # Index case
-    if key.endswith("]"):
-        if match := REGEX_INDEX.fullmatch(key):
-            key_part = match.group(1)
-            index_part = match.group(2)
-            if index_part == "*":
-                return _handle_ending_star_unwrap(source.get(key_part))
-            values = source.get(key_part)
-            if values is None:
-                values = []
-            try:
-                # Handle slicing
-                if ":" in index_part:
-                    s = slice(*[int(s) if s else None for s in index_part.split(":")])
-                    return values[s]
-                else:
-                    return values[int(index_part)]
-            except IndexError:
-                return default
-    # Tuple case
-    elif "," in key:
-        # Strip whitespace
-        key = key.replace(" ", "")
-        key_lists = [k.split(".") for k in key.split(",")]
-        res = tuple(_nested_get(source, kl, default) for kl in key_lists)
-        return res
-    return source.get(key, default)
-
-
-def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None) -> Any:
+def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     """
     Expects `.`-delimited string and tries to get the item in the dict.
 
@@ -105,31 +70,12 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
         l[*].a.b
       will return the following: [d['a']['b'] for d in l]
     """
-    # Handle base cases
-    match len(key_list):
-        case 0:
-            return default
-        case 1:
-            return _single_get(source, key_list[0], default)
-
-    queue = deque(key_list)
-    res = source
-    while len(queue) > 0:
-        key_part = queue.popleft()
-        # If need to unwrap, then empty queue
-        if key_part.endswith("[*]"):
-            res = res.get(key_part[:-3], [])
-            # Handle remaining queue items in the recursive call(s)
-            if len(queue) > 0:
-                res = [_nested_get(v, list(queue), default) for v in res]  # type: ignore
-                queue.clear()
-        else:
-            res = _single_get(res, key_part, default)
-            if res is default:
-                break
-    if key_list[-1].endswith("[*]"):
-        res = _handle_ending_star_unwrap(res)  # type: ignore
-    return res if res is not None else default
+    res = jmespath.search(key, source)
+    if isinstance(res, list):
+        res = [r if r is not None else default for r in res]
+    if res is None:
+        res = default
+    return res
 
 
 def _nested_set(
@@ -172,7 +118,7 @@ def drop_keys(source: dict[str, Any], keys_to_drop: Iterable[str]) -> dict[str, 
     for key in keys_to_drop:
         curr_keypath = _get_tokenized_keypath(key)
         if curr_keypath not in seen_keys:
-            if v := _nested_get(res, key.split(".")):
+            if v := _nested_get(res, key):
                 # Check if value has a DROP object
                 if isinstance(v, DROP):
                     # If "out of bounds", raise an error
@@ -196,7 +142,7 @@ def impute_enum_values(source: dict[str, Any], keys_to_impute: set[str]) -> dict
     """
     res = source
     for key in keys_to_impute:
-        curr_val = _nested_get(res, key.split("."))
+        curr_val = _nested_get(res, key)
         if isinstance(curr_val, KEEP):
             literal_val = curr_val.value
             res = _nested_set(res, _get_tokenized_keypath(key), literal_val)  # type: ignore
