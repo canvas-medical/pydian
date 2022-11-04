@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 
 from pydian import Mapper, get
-from pydian.lib.types import DROP, EMPTY, KEEP
+from pydian.lib.types import DROP, KEEP
 
 
 def test_drop(simple_data: dict[str, Any]) -> None:
@@ -80,12 +80,12 @@ def test_keep_empty_value() -> None:
 
     def mapping(_: dict[str, Any]) -> dict[str, Any]:
         return {
-            "empty_vals": [EMPTY.DICT, EMPTY.LIST, EMPTY.STRING, EMPTY.NONE],
+            "empty_vals": [KEEP({}), KEEP([]), KEEP(""), KEEP(None)],
             "nested_vals": {
-                "dict": EMPTY.DICT,
-                "list": EMPTY.LIST,
-                "str": EMPTY.STRING,
-                "none": EMPTY.NONE,
+                "dict": KEEP({}),
+                "list": KEEP([]),
+                "str": KEEP(""),
+                "none": KEEP(None),
                 "other_static_val": "Abc",
             },
             "static_val": "Def",
@@ -95,10 +95,10 @@ def test_keep_empty_value() -> None:
 
     mapper = Mapper(mapping)
     res = mapper(source)
-    assert EMPTY.DICT.value == dict()
-    assert EMPTY.LIST.value == list()
-    assert EMPTY.STRING.value == ""
-    assert EMPTY.NONE.value == None
+    assert KEEP({}).value == dict()
+    assert KEEP([]).value == list()
+    assert KEEP("").value == ""
+    assert KEEP(None).value == None
     assert res == {
         "empty_vals": [{}, [], "", None],
         "nested_vals": {"dict": {}, "list": [], "str": "", "none": None, "other_static_val": "Abc"},

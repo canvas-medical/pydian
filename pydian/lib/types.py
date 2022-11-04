@@ -49,15 +49,3 @@ class KEEP:
 
     def __init__(self, v: Any):
         self.value = v
-
-
-class EMPTY:
-    """
-    An EMPTY object is an intentional declaration in a data mapping that the specific "empty" value
-      should be intentionally kept by the Mapper class.
-    """
-
-    DICT = KEEP({})
-    LIST = KEEP([])
-    STRING = KEEP("")
-    NONE = KEEP(None)
