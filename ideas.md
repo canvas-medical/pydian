@@ -5,10 +5,6 @@ List of some feature/design ideas that aren't a priority now though could be int
 
 Remove from this list and re-scope accordingly once actually actively working an idea.
 
-## Add Enum to represent an empty object
-
-E.g. `EmptyDict`, `EmptyString`, etc. This will make the `remove_empty` checks more discrete and also give the framework a way of explicitly allowing sending an "empty" object (whenever it's semantically relevant)
-
 ## Database-like Support
 Support reading from a group of objects, either from SQL or from groups of objects (i.e. NoSQL collections).
 

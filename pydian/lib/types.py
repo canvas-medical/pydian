@@ -8,9 +8,9 @@ MappingFunc: TypeAlias = Callable[..., dict[str, Any]]
 
 class DROP(Enum):
     """
-    A DeleteRelativeObjectPlaceholder (abbrv. DROP) is a placeholder object
-      that indicates the object relative to the current value should be
-      dropped. An "object" in this context is a dict or a list.
+    A DeleteRelativeObjectPlaceholder (abbrv. DROP) is a placeholder object that indicates
+      the object relative to the current value should be dropped. An "object" in this context
+      is a dict or a list.
 
     Examples:
 
@@ -38,3 +38,14 @@ class DROP(Enum):
     PARENT = -2
     GRANDPARENT = -3
     GREATGRANDPARENT = -4
+
+
+class KEEP:
+    """
+    A value wrapped in a KEEP object should be ignored by the Mapper class when removing values.
+
+    Partial keeping is _not_ supported (i.e. a KEEP object within an object to be DROP-ed).
+    """
+
+    def __init__(self, v: Any):
+        self.value = v

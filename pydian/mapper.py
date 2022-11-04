@@ -1,8 +1,8 @@
 from typing import Any
 
-from .dicts import drop_keys
-from .lib.types import DROP, MappingFunc
-from .lib.util import remove_empty_values
+from .dicts import drop_keys, impute_enum_values
+from .lib.types import DROP, KEEP, MappingFunc
+from .lib.util import get_keys_containing_class, remove_empty_values
 
 
 class Mapper:
@@ -21,7 +21,7 @@ class Mapper:
         res = self.map_fn(source, **kwargs)
 
         # Handle any DROP-flagged values
-        keys_to_drop = self._get_keys_to_drop_set(res)
+        keys_to_drop = get_keys_containing_class(res, DROP)
         if keys_to_drop:
             res = drop_keys(res, keys_to_drop)
 
@@ -29,25 +29,9 @@ class Mapper:
         if self.remove_empty:
             res = remove_empty_values(res)
 
-        return res
+        # Impute EMPTY values with corresponding value
+        keys_to_impute = get_keys_containing_class(res, KEEP)
+        if keys_to_impute:
+            res = impute_enum_values(res, keys_to_impute)
 
-    def _get_keys_to_drop_set(self, source: dict[str, Any], key_prefix: str = "") -> set[str]:
-        """
-        Recursively finds all keys where a DROP object is found.
-        """
-        res = set()
-        for k, v in source.items():
-            curr_key = f"{key_prefix}.{k}" if key_prefix != "" else k
-            match v:
-                case dict() as v:
-                    res |= self._get_keys_to_drop_set(v, curr_key)
-                case list() as v:
-                    for i, item in enumerate(v):
-                        indexed_keypath = f"{curr_key}[{i}]"
-                        if isinstance(item, dict):
-                            res |= self._get_keys_to_drop_set(item, indexed_keypath)
-                        elif isinstance(item, DROP):
-                            res.add(indexed_keypath)
-                case DROP() as v:
-                    res.add(curr_key)
         return res
