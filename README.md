@@ -96,6 +96,7 @@ Pydian defines a special `get` function that provides a simple syntax for:
     - Chain gets with `.`
     - Index into lists, e.g. `[0]`, `[-1]`
     - Unwrap a list of dicts with `[*]`
+    - Get multiple items from a dict at once using `("firstKey", "secondKey")` syntax
 - Chaining successful operations with `apply`
 - Add a pre-condition with `only_if`
 - Specifying conditional dropping with `drop_level` (see [below](./README.md#conditional-dropping))
