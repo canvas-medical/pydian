@@ -39,11 +39,11 @@ def get_keys_containing_class(source: dict[str, Any], cls: type, key_prefix: str
     for k, v in source.items():
         curr_key = f"{key_prefix}.{k}" if key_prefix != "" else k
         match v:
-            case cls() as v:
+            case cls():  # type: ignore
                 res.add(curr_key)
-            case dict() as v:
+            case dict():
                 res |= get_keys_containing_class(v, cls, curr_key)
-            case list() as v:
+            case list():
                 for i, item in enumerate(v):
                     indexed_keypath = f"{curr_key}[{i}]"
                     if isinstance(item, cls):
