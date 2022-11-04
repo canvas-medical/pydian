@@ -5,45 +5,6 @@ List of some feature/design ideas that aren't a priority now though could be int
 
 Remove from this list and re-scope accordingly once actually actively working an idea.
 
-## Multiple get syntax (e.g. on unwrap)
-
-While iterating through a list, often we want to get multiple values. What if there was a syntax like:
-```python
-from pydian import get
-
-source = {
-    'a': 1,
-    'b': 2
-}
-assert get(source, '(a,b)') == (1,2)
-
-list_source = {
-    'l': [
-        {'a': 1, 'b': 2},
-        {'a': 3, 'a': 4}
-    ]
-}
-assert get(list_source, 'l[*].(a,b)') == [(1,2), (3,4)]
-
-
-nested_source = {
-    'l': [
-        {'a': {'1': {'2': 5}}, {'b': {'3': {'4': 6}}}},
-        {'a': {'1': {'2': 7}}, {'b': {'3': {'4': 8}}}}
-    ]
-}
-assert get(nested_source, 'l[*].(a.1.2,b.3.4)') == [(5, 6), (7, 8)]
-```
-... then could also query and do more things on top of that
-
-
-## List Slicing
-
-E.g. `l[1:].a`, or `l[:-1].a`, or `l[1:-1].a,b`, etc.
-
-Don't add this until it's useful (discourage overly complex logic)
-
-
 ## Database-like Support
 Support reading from a group of objects, either from SQL or from groups of objects (i.e. NoSQL collections).
 

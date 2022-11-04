@@ -106,14 +106,14 @@ def test_generic_conditional_wrappers() -> None:
 
 
 def test_iterable_wrappers() -> None:
-    value = [1, 2, 3, 4, 5]
-
-    assert p.keep(1)(value) == value[:1]
-    assert p.keep(50)(value) == value[:50]
-    assert p.index(0)(value) == value[0]
-    assert p.index(1)(value) == value[1]
-    assert p.index(-1)(value) == value[-1]
-    assert p.index(-3)(value) == value[-3]
+    supported_iterables = ([1, 2, 3, 4, 5], (1, 2, 3, 4, 5))
+    for value in supported_iterables:
+        assert p.keep(1)(value) == value[:1]
+        assert p.keep(50)(value) == value[:50]
+        assert p.index(0)(value) == value[0]
+        assert p.index(1)(value) == value[1]
+        assert p.index(-1)(value) == value[-1]
+        assert p.index(-3)(value) == value[-3]
 
 
 def test_stdlib_wrappers() -> None:

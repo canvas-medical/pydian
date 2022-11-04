@@ -4,6 +4,7 @@ from itertools import chain
 from typing import Any, Iterable, Sequence, TypeVar
 
 from .lib.types import DROP, KEEP, ApplyFunc, ConditionalCheck
+from .lib.util import split_key
 
 
 def get(
@@ -20,16 +21,19 @@ def get(
 
     `key` notes:
      - Use `.` to chain gets
-     - Index into lists, e.g. `[0]`, `[-1]`
+     - Index and slice into lists, e.g. `[0]`, `[-1]`, `[:1]`, etc.
      - Iterate through and "unwrap" a list using `[*]`
+     - Get multiple items using `(firstKey,secondKey)` syntax (outputs as a tuple)
+       The keys within the tuple can also be chained with `.`
 
-    Use `apply` to safely chain an operation on a successful get.
+    Use `apply` to safely chain operations on a successful get.
 
     Use `only_if` to conditionally decide if the result should be kept + `apply`-ed.
 
     Use `drop_level` to specify conditional dropping if get results in None.
     """
-    res = _nested_get(source, key.split("."), default)
+    key_list = split_key(key)
+    res = _nested_get(source, key_list, default)
 
     if res is not None and only_if:
         res = res if only_if(res) else None
@@ -50,13 +54,16 @@ def get(
     return res
 
 
-REGEX_INDEX = re.compile(r"(.*)\[(-?\d+|\*)\]$")
+REGEX_INDEX = re.compile(r"(.*)\[(-?\d*:?-?\d*|\*)\]$")
 
 
 def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
     """
     Gets single item, supports int indexing, e.g. `someKey[0]`
+
+    Handles the tuple case, e.g. `(a, b)` which returns a tuple getting both values
     """
+    # Index case
     if key.endswith("]"):
         if match := REGEX_INDEX.fullmatch(key):
             key_part = match.group(1)
@@ -67,9 +74,21 @@ def _single_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
             if values is None:
                 values = []
             try:
-                return values[int(index_part)]
+                # Handle slicing
+                if ":" in index_part:
+                    s = slice(*[int(s) if s else None for s in index_part.split(":")])
+                    return values[s]
+                else:
+                    return values[int(index_part)]
             except IndexError:
                 return default
+    # Tuple case
+    elif "," in key:
+        # Strip whitespace
+        key = key.replace(" ", "")
+        key_lists = [k.split(".") for k in key.split(",")]
+        res = tuple(_nested_get(source, kl, default) for kl in key_lists)
+        return res
     return source.get(key, default)
 
 
@@ -89,7 +108,7 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
     # Handle base cases
     match len(key_list):
         case 0:
-            return None
+            return default
         case 1:
             return _single_get(source, key_list[0], default)
 
@@ -102,11 +121,11 @@ def _nested_get(source: dict[str, Any], key_list: list[str], default: Any = None
             res = res.get(key_part[:-3], [])
             # Handle remaining queue items in the recursive call(s)
             if len(queue) > 0:
-                res = [_nested_get(v, list(queue), []) for v in res]  # type: ignore
+                res = [_nested_get(v, list(queue), default) for v in res]  # type: ignore
                 queue.clear()
         else:
-            res = _single_get(res, key_part)
-            if res is None:
+            res = _single_get(res, key_part, default)
+            if res is default:
                 break
     if key_list[-1].endswith("[*]"):
         res = _handle_ending_star_unwrap(res)  # type: ignore
@@ -131,9 +150,9 @@ def _nested_set(
 
 def _get_tokenized_keypath(key: str) -> tuple[str | int, ...]:
     """
-    Returns a keypath with str and ints separated.
+    Returns a keypath with str and ints separated. Prefer tuples so it is hashable.
 
-    E.g.: "a[0].b[-1].c" -> ["a", 0, "b", -1, "c"]
+    E.g.: "a[0].b[-1].c" -> ("a", 0, "b", -1, "c")
     """
     tokenized_key = key.replace("[", ".").replace("]", "")
     keypath = tokenized_key.split(".")
