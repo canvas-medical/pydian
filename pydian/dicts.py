@@ -1,12 +1,9 @@
-import re
-from collections import deque
 from itertools import chain
 from typing import Any, Iterable, Sequence, TypeVar
 
 import jmespath
 
 from .lib.types import DROP, KEEP, ApplyFunc, ConditionalCheck
-from .lib.util import split_key
 
 
 def get(

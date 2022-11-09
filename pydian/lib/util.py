@@ -53,30 +53,3 @@ def get_keys_containing_class(source: dict[str, Any], cls: type, key_prefix: str
                     elif isinstance(item, dict):
                         res |= get_keys_containing_class(item, cls, indexed_keypath)
     return res
-
-
-REGEX_TUPLE_CASE_DELIM = re.compile(r"\.?\(|\)\.?")
-
-
-def split_key(key: str) -> list[str]:
-    """
-    Splits keys into individual components. Removes spaces.
-
-    Handles the tuple case, e.g.:
-        "a.b.(c,d)" -> ["a", "b", "c,d"]
-    """
-    if "(" in key:
-        split_parts = re.split(REGEX_TUPLE_CASE_DELIM, key)
-        # Remove beginning and trailing empty strings
-        if split_parts:
-            if split_parts[0] == "":
-                split_parts = split_parts[1:]
-            if split_parts[-1] == "":
-                split_parts = split_parts[:-1]
-        # Remove spaces
-        split_parts = [p.replace(" ", "") for p in split_parts]
-        # Split into sublists
-        split_subparts = [p.split(".") if "," not in p else [p] for p in split_parts]
-        return list(chain.from_iterable(split_subparts))
-    else:
-        return key.split(".")
