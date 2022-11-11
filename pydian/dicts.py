@@ -32,6 +32,7 @@ def get(
     Use `drop_level` to specify conditional dropping if get results in None.
     """
     res = _nested_get(source, key, default)
+
     if key.endswith("[*]"):
         res = _handle_ending_star_unwrap(res)  # type: ignore
 
@@ -67,6 +68,8 @@ def _nested_get(source: dict[str, Any], key: str, default: Any = None) -> Any:
         l[*].a.b
       will return the following: [d['a']['b'] for d in l]
     """
+    if key.endswith("[*]"):
+        key = key.removesuffix("[*]")
     res = jmespath.search(key, source)
     if isinstance(res, list):
         res = [r if r is not None else default for r in res]
