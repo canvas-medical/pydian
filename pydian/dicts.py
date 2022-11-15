@@ -1,9 +1,9 @@
-from itertools import chain
-from typing import Any, Iterable, Sequence, TypeVar
+from typing import Any, Iterable, Sequence
 
 import jmespath
 
 from .lib.types import DROP, KEEP, ApplyFunc, ConditionalCheck
+from .lib.util import flatten_list
 
 
 def get(
@@ -13,6 +13,7 @@ def get(
     apply: ApplyFunc | Iterable[ApplyFunc] | None = None,
     only_if: ConditionalCheck | None = None,
     drop_level: DROP | None = None,
+    flatten: bool = False,
 ) -> Any:
     """
     Gets a value from the source dictionary using a `.` syntax.
@@ -21,7 +22,7 @@ def get(
     `key` notes:
      - Use `.` to chain gets
      - Index and slice into lists, e.g. `[0]`, `[-1]`, `[:1]`, etc.
-     - Iterate through and "unwrap" a list using `[*]`
+     - Iterate through a list using `[*]`
      - Get multiple items using `(firstKey,secondKey)` syntax (outputs as a tuple)
        The keys within the tuple can also be chained with `.`
 
@@ -30,11 +31,13 @@ def get(
     Use `only_if` to conditionally decide if the result should be kept + `apply`-ed.
 
     Use `drop_level` to specify conditional dropping if get results in None.
+
+    Use `flatten` to flatten nested lists.
     """
     res = _nested_get(source, key, default)
 
-    if key.endswith("[*]"):
-        res = _handle_ending_star_unwrap(res)  # type: ignore
+    if flatten and isinstance(res, list):
+        res = flatten_list(res)
 
     if res is not None and only_if:
         res = res if only_if(res) else None
@@ -146,20 +149,4 @@ def impute_enum_values(source: dict[str, Any], keys_to_impute: set[str]) -> dict
         if isinstance(curr_val, KEEP):
             literal_val = curr_val.value
             res = _nested_set(res, _get_tokenized_keypath(key), literal_val)  # type: ignore
-    return res
-
-
-T = TypeVar("T")
-
-
-def _handle_ending_star_unwrap(res: T) -> T | list[Any]:
-    """
-    Handles case of [*] unwrap specified at the end
-
-    E.g. given: `a[*].b.c`    -> [[1, 2, 3], [4, 5, 6], None, [7, 8, 9]]
-          then: `a[*].b.c[*]` -> [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    """
-    if isinstance(res, list):
-        if res_without_nones := [l for l in res if (l is not None) and (isinstance(l, list))]:
-            return list(chain.from_iterable(res_without_nones))
     return res

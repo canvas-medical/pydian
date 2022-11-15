@@ -1,4 +1,3 @@
-import re
 from collections.abc import Collection
 from itertools import chain
 from typing import Any, TypeVar
@@ -52,4 +51,18 @@ def get_keys_containing_class(source: dict[str, Any], cls: type, key_prefix: str
                         res.add(indexed_keypath)
                     elif isinstance(item, dict):
                         res |= get_keys_containing_class(item, cls, indexed_keypath)
+    return res
+
+
+def flatten_list(res: list[list[Any]]) -> list[Any]:
+    """
+    Flattens a list-of-list
+
+    E.g. Given:    [[1, 2, 3], [4, 5, 6], None, [7, 8, 9]]
+         Returns:  [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    """
+    if res_without_nones := [l for l in res if (l is not None) and (isinstance(l, list))]:
+        res = list(chain.from_iterable(res_without_nones))
+        # Handle nested case
+        res = flatten_list(res)
     return res

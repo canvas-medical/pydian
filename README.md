@@ -96,11 +96,9 @@ Pydian defines a special `get` function that leverages [JMESPath](https://jmespa
 - Chaining successful operations with `apply`
 - Add a pre-condition with `only_if`
 - Specifying conditional dropping with `drop_level` (see [below](./README.md#conditional-dropping))
+- Flatten nested lists with `flatten`
 
 `None` handling is built-in which reduces boilerplate code!
-
-Additional keypath features include:
-- Unwrap list-of-lists with an ending `[*]`
 
 ## `Mapper` Functionality
 

@@ -69,9 +69,9 @@ def test_nested_get(nested_data: dict[str, Any]) -> None:
             "CASE_unwrap_active": get(m, "data[*].patient.active"),
             "CASE_unwrap_id": get(m, "data[*].patient.id"),
             "CASE_unwrap_list": get(m, "data[*].patient.ints"),
-            "CASE_unwrap_list_twice": get(m, "data[*].patient.ints[*]"),
+            "CASE_unwrap_list_twice": get(m, "data[*].patient.ints", flatten=True),
             "CASE_unwrap_list_dict": get(m, "data[*].patient.dicts[*].num"),
-            "CASE_unwrap_list_dict_twice": get(m, "data[*].patient.dicts[*].num[*]"),
+            "CASE_unwrap_list_dict_twice": get(m, "data[*].patient.dicts[*].num", flatten=True),
             # Expect this to get removed
             "CASE_bad_key": {
                 "single": get(m, "missing.key"),

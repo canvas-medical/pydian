@@ -1,4 +1,4 @@
-from pydian.lib.util import remove_empty_values
+from pydian.lib.util import flatten_list, remove_empty_values
 
 
 def test_remove_empty_values() -> None:
@@ -11,3 +11,10 @@ def test_remove_empty_values() -> None:
     # Nested cases
     assert remove_empty_values([{}, ["", None], [{"empty": {"dict": {"key": None}}}]]) == []
     assert remove_empty_values({"empty_list": [{}, {}, {}], "empty_dict": {"someKey": {}}}) == {}
+
+
+def test_flatten_list() -> None:
+    assert flatten_list([[1], [2], [3]]) == [1, 2, 3]
+    assert flatten_list([[1, 2], [3, 4], [5, 6]]) == [1, 2, 3, 4, 5, 6]
+    # assert flatten_list([[[1], 2], [[3], 4], [[5], 6]) == [1, 2, 3, 4, 5, 6]
+    assert flatten_list([[[1], [2]], [[3], [4]], [[5], [6]]]) == [1, 2, 3, 4, 5, 6]
